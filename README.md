@@ -1,17 +1,17 @@
-# vue-electron
+# Markwriter
 
-Basic vue-electron boilerplate
+A simple markdown editor
 
-**Features**
+![](./sample-image.png)
 
-- vuetify: material design UI for vue with default layout
-- vue electron plugin
-- electron builder: to build cross platform app
-- electron extra-resources: All the extra resources under `src/extra-resources` will be moved under `resources` of root path after the build. It can be utils if you want to load extra scripts
-- electron app-menu with default template and custom `updateTemplateItem()` function to update dinamically the menu
-- electron debugger. Debugger in vs code
+## Download
 
-## Usage
+Available for:
+ - [Linux](https://github.com/sdiricco/simple-markdown-editor/packages)
+
+Check [GitHub packages](https://github.com/sdiricco/simple-markdown-editor/packages)
+
+## Develope
 
 To run in development mode
 
@@ -27,3 +27,4 @@ To build
 ```sh
 yarn electron:build
 ```
+

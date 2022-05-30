@@ -17,7 +17,10 @@ module.exports = {
     electronBuilder: {
       nodeIntegration: true,
       builderOptions: {
-        "productName": 'Example',
+        "productName": 'markwriter',
+        "linux": {
+          "target": ["AppImage"]
+        },
         "extraResources": [
           {
             "from": "./src/extra-resources/",

@@ -1,10 +1,19 @@
 <template>
   <v-app>
     <v-main>
-      <v-container class="text" fluid id="main-container">
-        <textarea id="editor" v-model="file.content"></textarea>
+      <v-container class="ma-0 pa-0" fluid id="main-container">
+        <textarea id="editor" v-model="editFile.content"></textarea>
         <article class="markdown-body" v-html="markdownToHtml"></article>
-        <v-snackbar text outlined color="primary" v-model="snackbar.active" :timeout="snackbar.timeout">
+        <v-snackbar
+          :width="snackbar.width"
+          :max-width="snackbar.maxWidth"
+          bottom
+          text
+          outlined
+          color="primary"
+          v-model="snackbar.active"
+          :timeout="snackbar.timeout"
+        >
           <div class="d-flex align-center justify-space-between">
             <h3>Saving...</h3>
             <v-progress-circular
@@ -34,50 +43,147 @@ export default {
         path: "",
         stat: {},
       },
+      editFile: {
+        name: "",
+        content: "",
+        path: "",
+        stat: {},
+        modified: false,
+      },
       snackbar: {
         active: false,
         timeout: 1000,
+        width: "50px",
+        maxWidth: "50px",
+      },
+      electron: {
+        openDialogOptions: {
+          filters: [{ name: "Markdown", extensions: ["md", "markdown"] }],
+        },
+        saveDialogOptions: {
+          defaultPath: "Document.md",
+          filters: [{ name: "Markdown", extensions: ["md", "markdown"] }],
+        },
       },
     };
   },
   computed: {
     markdownToHtml() {
-      return marked(this.file.content);
+      return marked(this.editFile.content);
     },
+    fileContent(){
+      return this.editFile.content;
+    },
+    fileChanged(){
+      return this.editFile.modified;
+    }
+  },
+  watch: {
+    fileContent: function(){
+      this.editFile.modified = this.file.content !== this.editFile.content;
+    },
+    fileChanged: function(value){
+      this.electronFileChanged(value)
+    }
   },
   methods: {
     //ELECTRON
     //show electron dialog message
-    async showMessage() {
+    async electronShowMessage() {
       await ipcRenderer.invoke("message:box", this.message);
     },
     //open file from electron dialog
-    async openFile(options) {
+    async electronOpenFile(options = {}) {
       return await ipcRenderer.invoke("open:file", options);
     },
-    async saveFile(file = { path: "", content: "" }) {
+    //save file to file system
+    async electronSaveFile(file = { path: "", content: "" }) {
       return await ipcRenderer.invoke("save:file", file);
     },
+    //save as file to file system
+    async electronSaveDialog(data = { content: "", options: {} }) {
+      return await ipcRenderer.invoke("saveas:file", data);
+    },
+    //set app title
+    async electronSetTitle(title = "") {
+      return await ipcRenderer.invoke("app:settitle", title);
+    },
+    //notify electron main that the edit file is changed
+    async electronFileChanged(value){
+      return await ipcRenderer.invoke("file:changed", value)
+    },
+    //GENERIC HANDLERS
+    //Save as file handler
+    async saveAsFileHandler() {
+      const response = await this.electronSaveDialog({
+        content: this.editFile.content,
+        options: this.electron.saveDialogOptions,
+      });
+      console.log("Response > electronSaveDialog()", response);
+      if (response.data.canceled) {
+        return;
+      }
+
+      this.file = response.data.file;
+      this.editFile = {...this.file, modified: false}
+
+      await this.electronSetTitle(this.file.path);
+    },
+    //Save file handler
+    async saveFileHandler() {
+      const response = await this.electronSaveFile({
+        path: this.editFile.path,
+        content: this.editFile.content,
+      });
+
+      this.editFile.modified = false;
+      console.log("Response > electronSaveFile()", response);
+    },
+    //Open file handler
+    async openFileHandler(){
+      const response = await this.electronOpenFile(
+        this.electron.openDialogOptions
+      );
+
+      console.log("Response > electronOpenFile()", response);
+
+      //check if canceled
+      if (response.data.canceled) {
+        return;
+      }
+
+      this.file = response.data.file;
+      this.editFile = {...this.file, modified: false}
+
+      await this.electronSetTitle(this.file.path);
+    },
+    //MENU ACTIONS HANDLER
+    //Open
     async menuOnOpen() {
       console.log("Open");
-      const options = {
-        filters: [{ name: "Markdown", extensions: ["md", "markdown"] }],
-      };
-      const response = await this.openFile(options);
-      console.log("Response > openFile()", response);
-      if (!response.data.files.length) {
-        return;
-      }
-      this.file = response.data.files[0];
+      await this.openFileHandler();
     },
+    //Save
     async menuSave() {
       console.log("Save");
-      if (this.file.path === '') {
-        return;
+      //if not modified return
+      if (!this.editFile.modified) {
+        return
       }
-      this.snackbar.active = true;
-      const response = await this.saveFile({ path: this.file.path, content: this.file.content });
-      console.log("Response > saveFile()", response);
+      //if no files are open, open save dialog
+      if (this.file.path === "") {
+        await this.saveAsFileHandler();
+      }
+      //if the file is open, simply save
+      else {
+        this.snackbar.active = true;
+        await this.saveFileHandler();
+      }
+    },
+    //Save as
+    async menuSaveAs() {
+      console.log("Save as");
+      await this.saveAsFileHandler();
     },
     async onClickMenuItem(event, tree) {
       switch (tree[0]) {
@@ -87,11 +193,10 @@ export default {
               await this.menuOnOpen();
               break;
             case "Save":
-              console.log("Save");
               await this.menuSave();
               break;
             case "Save as..":
-              console.log("Save as..");
+              await this.menuSaveAs();
               break;
             default:
               break;
@@ -110,10 +215,15 @@ export default {
           break;
       }
     },
+    async onCloseApp() {
+      console.log('close the app');
+      await this.electronCloseApp()
+    },
   },
   async mounted() {
     await ipcRenderer.invoke("dom:loaded");
     ipcRenderer.on("menu:action", this.onClickMenuItem);
+    ipcRenderer.on("app:before-quit", this.onCloseApp);
   },
 };
 </script>
@@ -133,7 +243,7 @@ body,
   height: 100%;
   vertical-align: top;
   box-sizing: border-box;
-  padding: 0 20px;
+  padding: 20px;
 }
 
 #editor {
