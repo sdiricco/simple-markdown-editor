@@ -9,7 +9,7 @@ A simple markdown editor
 Available for:
  - [Linux](https://github.com/sdiricco/simple-markdown-editor/releases/tag/alpha-0.8.0)
 
-Check [GitHub packages](https://github.com/sdiricco/simple-markdown-editor/packages)
+Check [GitHub packages](https://github.com/sdiricco/simple-markdown-editor/releases/tag/alpha-0.8.0)
 
 ## Develope
 
