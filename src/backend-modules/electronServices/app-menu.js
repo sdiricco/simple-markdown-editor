@@ -51,6 +51,17 @@ function createTemplate(app, window, onClickItem) {
         },
         { type: "separator" },
         {
+          label: "Build",
+          accelerator: "Ctrl + B",
+          click: (menuItem, browserWindow, event) =>
+            onClickItem(["File", "Build"], {
+              menuItem: menuItem,
+              browserWindow: browserWindow,
+              event: event,
+            }),
+        },
+        { type: "separator" },
+        {
           label: "Save",
           accelerator: "Ctrl + S",
           click: (menuItem, browserWindow, event) =>

@@ -7,9 +7,15 @@
             v-if="viewEditor"
             spellcheck="false"
             v-model="editFile.content"
-            :style="{width: widthTextarea}"
+            :style="{ width: widthTextarea }"
           ></textarea>
-          <div :style="{width: widthPreview}" v-if="viewPreview" id="preview" class="markdown-body" v-html="editFile.html"></div>
+          <div
+            v-if="viewPreview"
+            :style="{ width: widthPreview }"
+            id="preview"
+            class="markdown-body"
+            v-html="editFile.html"
+          ></div>
         </div>
         <article class="empty" v-if="!viewPreview && !viewEditor">
           <pre>
@@ -18,6 +24,18 @@
           </pre>
         </article>
       </div>
+      <v-dialog v-model="loadingHtml" persistent width="200">
+        <v-card color="primary" dark>
+          <v-card-text class="pa-4">
+            Building..
+            <v-progress-linear
+              class="pa-4"
+              indeterminate
+              color="white"
+            ></v-progress-linear>
+          </v-card-text>
+        </v-card>
+      </v-dialog>
       <v-snackbar
         :width="snackbar.width"
         :max-width="snackbar.maxWidth"
@@ -43,7 +61,6 @@
 
 <script>
 import { ipcRenderer } from "electron";
-import { markdownToHtml, setFilePath } from "./services/markdown";
 import {
   electronOpenFile,
   electronFileChanged,
@@ -51,6 +68,9 @@ import {
   electronSaveFile,
   electronSetTitle,
   electronDomLoaded,
+  electronMarkdownParse,
+  electronSetMarkdownPath,
+  electronShowError
 } from "./services/electronApi";
 
 export default {
@@ -58,7 +78,7 @@ export default {
   components: {},
   data() {
     return {
-      timerDebounce: null,
+      loadingHtml: false,
       viewEditor: true,
       viewPreview: true,
       widthTextarea: "50%",
@@ -79,7 +99,7 @@ export default {
       },
       snackbar: {
         active: false,
-        timeout: 1000,
+        timeout: 500,
         width: "50px",
         maxWidth: "50px",
       },
@@ -107,40 +127,40 @@ export default {
   },
   watch: {
     fileContent: function () {
-      if (this.timerDebounce) {
-        return;
-      }
-      this.timerDebounce = setTimeout(()=>{
-        this.editFile.html = markdownToHtml(this.editFile.content);
-        this.editFile.modified = this.file.content !== this.editFile.content;
-        clearTimeout(this.timerDebounce)
-        this.timerDebounce = null;
-      }, 500)
-
+      this.editFile.modified = this.editFile.content !== this.file.content;
     },
     fileChanged: async function (value) {
-      console.log('file changed');
       await electronFileChanged(value);
     },
-    filePath: function (value) {
-      setFilePath(value);
+    filePath: async function (value) {
+      await electronSetMarkdownPath(value);
     },
-    viewPreview: function(value) {
-      this.widthTextarea = value ? "50%" : "100%"
+    viewPreview: function (value) {
+      this.widthTextarea = value ? "50%" : "100%";
     },
-    viewEditor: function(value) {
-      this.widthPreview = value ? "50%" : "100%"
-    }
+    viewEditor: function (value) {
+      this.widthPreview = value ? "50%" : "100%";
+    },
   },
   methods: {
     //GENERIC HANDLERS
+    //Build markdown
+    async buildFileHandler() {
+      if (this.loadingHtml) {
+        return;
+      }
+      this.loadingHtml = true;
+      const response = await electronMarkdownParse(this.editFile.content);
+      this.editFile.html = response.data.html;
+      this.loadingHtml = false;
+    },
     //Save as file handler
     async saveAsFileHandler() {
-      const response = await electronSaveDialog({
+      let response = await electronSaveDialog({
         content: this.editFile.content,
         options: this.electron.saveDialogOptions,
       });
-      console.log("Response > electronSaveDialog()", response);
+      console.log("Response > electronSaveDialog()");
       if (response.data.canceled) {
         return;
       }
@@ -152,29 +172,39 @@ export default {
       this.file = response.data.file;
       this.editFile = { ...this.file, ...additionalFields };
 
+      await electronSetMarkdownPath(this.editFile.path);
+      await this.buildFileHandler();
 
-      setFilePath(this.editFile.path);
-      this.editFile.html = markdownToHtml(this.editFile.content);
       this.editFile.changed = false;
 
       await electronSetTitle(this.file.path);
     },
     //Save file handler
     async saveFileHandler() {
-      const response = await electronSaveFile({
+      if (this.snackbar.active) {
+        return;
+      }
+      this.snackbar.active = true;
+      await electronSaveFile({
         path: this.editFile.path,
         content: this.editFile.content,
       });
 
+      this.file.content = this.editFile.content;
       this.editFile.modified = false;
-      console.log("Response > electronSaveFile()", response);
+      console.log("Response > electronSaveFile()");
     },
     //Open file handler
     async openFileHandler() {
-      const response = await electronOpenFile(this.electron.openDialogOptions);
-
-      console.log("Response > electronOpenFile()", response);
-
+      let response = null
+      if (this.editFile.modified) {
+        response = await electronShowError("File modified. Are you sure to open a new file and discard all changes?");
+        if (response.data.canceled) {
+          return;
+        }
+      }
+      response = await electronOpenFile(this.electron.openDialogOptions);
+      console.log("Response > electronOpenFile()");
       //check if canceled
       if (response.data.canceled) {
         return;
@@ -187,12 +217,8 @@ export default {
       this.file = response.data.file;
       this.editFile = { ...this.file, ...additionalFields };
 
-      console.log("this.editFile", this.editFile);
-
-
-      setFilePath(this.editFile.path);
-      this.editFile.html = markdownToHtml(this.editFile.content);
-      this.editFile.changed = false;
+      await electronSetMarkdownPath(this.editFile.path);
+      await this.buildFileHandler();
 
       await electronSetTitle(this.file.path);
     },
@@ -215,7 +241,6 @@ export default {
       }
       //if the file is open, simply save
       else {
-        this.snackbar.active = true;
         await this.saveFileHandler();
       }
     },
@@ -236,6 +261,9 @@ export default {
       console.log("View preview", checked);
       this.viewPreview = checked;
     },
+    async menuOnBuild() {
+      this.buildFileHandler();
+    },
     async onClickMenuItem(_event, data = { tree: [], options: {} }) {
       const tree = data.tree;
       const options = data.options;
@@ -244,6 +272,9 @@ export default {
           switch (tree[1]) {
             case "Open":
               await this.menuOnOpen(options);
+              break;
+            case "Build":
+              await this.menuOnBuild(options);
               break;
             case "Save":
               await this.menuOnSave(options);
@@ -343,7 +374,7 @@ code {
   align-items: center;
 }
 
-.main-container{
+.main-container {
   height: 100%;
 }
 </style>

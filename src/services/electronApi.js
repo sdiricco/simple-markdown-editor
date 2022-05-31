@@ -2,8 +2,11 @@ import { ipcRenderer } from "electron";
 
 //ELECTRON
 //show electron dialog message
-export async function electronShowMessage() {
-  await ipcRenderer.invoke("message:box", this.message);
+export async function electronShowMessage(message) {
+  return await ipcRenderer.invoke("message:box", message);
+}
+export async function electronShowError(message) {
+  return await ipcRenderer.invoke("error:box", message);
 }
 //open file from electron dialog
 export async function electronOpenFile(options = {}) {
@@ -28,4 +31,12 @@ export async function electronFileChanged(value) {
 //notify electron main that the dom is correctly loaded
 export async function electronDomLoaded(){
     return await ipcRenderer.invoke("dom:loaded");
+}
+
+export async function electronSetMarkdownPath(p = ''){
+  return await ipcRenderer.invoke("markdown:setpath", p)
+}
+
+export async function electronMarkdownParse(data = ''){
+  return await ipcRenderer.invoke("markdown:parse", data)
 }

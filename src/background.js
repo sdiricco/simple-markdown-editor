@@ -1,6 +1,7 @@
 import { app, ipcMain, protocol, BrowserWindow, dialog } from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
+import { markdownToHtml, setFilePath } from "./services/markdown";
 const appMenu = require("./backend-modules/electronServices/app-menu");
 const path = require("path");
 const fs = require("fs/promises");
@@ -121,9 +122,10 @@ function onClickMenuItem(tree, options) {
     accelerator: options.menuItem.accelerator || null,
     sublabel: options.menuItem.sublabel || null,
     toolTip: options.menuItem.toolTip || null,
-    enabled: options.menuItem.enabled|| null,
+    enabled: options.menuItem.enabled || null,
     visible: options.menuItem.visible || null,
-    acceleratorWorksWhenHidden: options.menuItem.acceleratorWorksWhenHidden || null,
+    acceleratorWorksWhenHidden:
+      options.menuItem.acceleratorWorksWhenHidden || null,
     registerAccelerator: options.menuItem.registerAccelerator || null,
     commandId: 49,
   };
@@ -180,7 +182,7 @@ ipcMain.handle(
     result.data.file.content = content;
     result.data.file.stat = stat;
 
-    console.log("Electron handle > open:file > result:", result);
+    console.log("Electron handle > open:file > result:");
     return result;
   }
 );
@@ -202,7 +204,7 @@ ipcMain.handle("save:file", async (event, file) => {
     result.errorMessage = e.message;
   }
 
-  console.log("Electron handle > save:file > result:", result);
+  console.log("Electron handle > save:file > result:");
   return result;
 });
 
@@ -223,7 +225,7 @@ ipcMain.handle(
       },
     };
 
-    console.log("Electron handle > saveas:file > params:", data);
+    console.log("Electron handle > saveas:file > params:");
 
     const dialogOptions = { ...data.options };
     console.log("showSaveDialogSync > dialogOptions", dialogOptions);
@@ -252,7 +254,7 @@ ipcMain.handle(
       result.errorMessage = e.message;
     }
 
-    console.log("Electron handle > save:file > result:", result);
+    console.log("Electron handle > save:file > result:");
     return result;
   }
 );
@@ -270,3 +272,57 @@ ipcMain.handle("file:changed", (event, value) => {
   }`;
   win.setTitle(title);
 });
+
+ipcMain.handle("markdown:parse", (event, data) => {
+  const result = {
+    error: false,
+    errorMessage: "",
+    data: {
+      html: "",
+    },
+  };
+
+  result.data.html = markdownToHtml(data);
+  return result 
+});
+
+ipcMain.handle("markdown:setpath", (event, p) => {
+  const result = {
+    error: false,
+    errorMessage: "",
+    data: {
+      path: "",
+    },
+  };
+
+  setFilePath(p);
+  result.data.path = p;
+
+  return result;
+})
+
+ipcMain.handle("error:box", async (event, data) => {
+  const result = {
+    error: false,
+    errorMessage: "",
+    data: {
+      canceled: false
+    },
+  };
+  try {
+    const _ = await dialog.showMessageBox(win, {
+      message: data,
+      title: "Save file",
+      type: "question",
+      buttons: ["Ok", "cancel"]
+    })
+    result.data.canceled = _.response > 0
+  } catch (e) {
+    result.error = true;
+    result.errorMessage = e.message;
+  }
+
+  console.log("error:box > result", result);
+  return result
+
+})
