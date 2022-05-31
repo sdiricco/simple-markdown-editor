@@ -7,9 +7,9 @@ A simple markdown editor
 ## Download
 
 Available for:
- - [Linux](https://github.com/sdiricco/simple-markdown-editor/releases/tag/alpha-0.8.0)
+ - [Linux](https://github.com/sdiricco/simple-markdown-editor/releases/tag/alpha-0.8.1)
 
-Check [GitHub packages](https://github.com/sdiricco/simple-markdown-editor/releases/tag/alpha-0.8.0)
+Check [GitHub packages](https://github.com/sdiricco/simple-markdown-editor/releases/tag/alpha-0.8.1)
 
 ## Develope
 
