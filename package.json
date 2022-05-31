@@ -1,7 +1,7 @@
 {
   "name": "markwriter",
   "description": "A simple markdown editor",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
@@ -19,7 +19,9 @@
     "core-js": "^3.6.5",
     "electron-rebuild": "^3.2.7",
     "github-markdown-css": "^5.1.0",
+    "highlight.js": "^11.5.1",
     "less-loader": "^10.2.0",
+    "lodash": "^4.17.21",
     "marked": "^4.0.16",
     "ramda": "^0.28.0",
     "vue": "^2.6.11",

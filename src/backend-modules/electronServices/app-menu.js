@@ -42,18 +42,33 @@ function createTemplate(app, window, onClickItem) {
       submenu: [
         {
           label: "Open",
-          click: () => onClickItem(["File", "Open"]),
+          click: (menuItem, browserWindow, event) =>
+            onClickItem(["File", "Open"], {
+              menuItem: menuItem,
+              browserWindow: browserWindow,
+              event: event,
+            }),
         },
         { type: "separator" },
         {
           label: "Save",
           accelerator: "Ctrl + S",
-          click: () => onClickItem(["File", "Save"]),
+          click: (menuItem, browserWindow, event) =>
+            onClickItem(["File", "Save"], {
+              menuItem: menuItem,
+              browserWindow: browserWindow,
+              event: event,
+            }),
         },
         {
           label: "Save as..",
           accelerator: "Ctrl + Shift + S",
-          click: () => onClickItem(["File", "Save as.."]),
+          click: (menuItem, browserWindow, event) =>
+            onClickItem(["File", "Save as.."], {
+              menuItem: menuItem,
+              browserWindow: browserWindow,
+              event: event,
+            }),
         },
         { type: "separator" },
         isMac ? { role: "close" } : { role: "quit" },
@@ -85,6 +100,33 @@ function createTemplate(app, window, onClickItem) {
     },
     // { role: 'windowMenu' }
     {
+      label: "View",
+      submenu: [
+        {
+          label: "Editor",
+          type: "checkbox",
+          checked: true,
+          click: (menuItem, browserWindow, event) =>
+            onClickItem(["View", "Editor"], {
+              menuItem: menuItem,
+              browserWindow: browserWindow,
+              event: event,
+            }),
+        },
+        {
+          label: "Preview",
+          type: "checkbox",
+          checked: true,
+          click: (menuItem, browserWindow, event) =>
+            onClickItem(["View", "Preview"], {
+              menuItem: menuItem,
+              browserWindow: browserWindow,
+              event: event,
+            }),
+        },
+      ],
+    },
+    {
       label: "Window",
       submenu: [
         { role: "reload" },
@@ -112,7 +154,12 @@ function createTemplate(app, window, onClickItem) {
       submenu: [
         {
           label: "Learn More",
-          click: () => onClickItem(["Help", "Learn More"]),
+          click: (menuItem, browserWindow, event) =>
+            onClickItem(["Help", "Learn More"], {
+              menuItem: menuItem,
+              browserWindow: browserWindow,
+              event: event,
+            }),
         },
       ],
     },

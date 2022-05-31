@@ -1,7 +1,13 @@
 html{
-    overflow-y: auto !important;
+  overflow-y: hidden !important;
 }
 
+html,
+body,
+#main-container {
+  margin: 0;
+  height: 100%;
+}
 
 
 .markdown-body {

@@ -27,4 +27,3 @@ To build
 ```sh
 yarn electron:build
 ```
-

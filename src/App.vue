@@ -1,42 +1,68 @@
 <template>
   <v-app>
     <v-main>
-      <v-container class="ma-0 pa-0" fluid id="main-container">
-        <textarea id="editor" v-model="editFile.content"></textarea>
-        <article class="markdown-body" v-html="markdownToHtml"></article>
-        <v-snackbar
-          :width="snackbar.width"
-          :max-width="snackbar.maxWidth"
-          bottom
-          text
-          outlined
-          color="primary"
-          v-model="snackbar.active"
-          :timeout="snackbar.timeout"
-        >
-          <div class="d-flex align-center justify-space-between">
-            <h3>Saving...</h3>
-            <v-progress-circular
-              size="24"
-              indeterminate
-              color="primary"
-            ></v-progress-circular>
-          </div>
-        </v-snackbar>
-      </v-container>
+      <div class="ma-0 pa-0 main-container">
+        <div id="editor" v-if="viewEditor || viewPreview">
+          <textarea
+            v-if="viewEditor"
+            spellcheck="false"
+            v-model="editFile.content"
+            :style="{width: widthTextarea}"
+          ></textarea>
+          <div :style="{width: widthPreview}" v-if="viewPreview" id="preview" class="markdown-body" v-html="editFile.html"></div>
+        </div>
+        <article class="empty" v-if="!viewPreview && !viewEditor">
+          <pre>
+            <h2>Nothing to see</h2>
+            <p>From the View menu select Editor or Preview</p>
+          </pre>
+        </article>
+      </div>
+      <v-snackbar
+        :width="snackbar.width"
+        :max-width="snackbar.maxWidth"
+        bottom
+        text
+        outlined
+        color="primary"
+        v-model="snackbar.active"
+        :timeout="snackbar.timeout"
+      >
+        <div class="d-flex align-center justify-space-between">
+          <h3>Saving...</h3>
+          <v-progress-circular
+            size="24"
+            indeterminate
+            color="primary"
+          ></v-progress-circular>
+        </div>
+      </v-snackbar>
     </v-main>
   </v-app>
 </template>
 
 <script>
-const { ipcRenderer } = require("electron");
-import { marked } from "marked";
+import { ipcRenderer } from "electron";
+import { markdownToHtml, setFilePath } from "./services/markdown";
+import {
+  electronOpenFile,
+  electronFileChanged,
+  electronSaveDialog,
+  electronSaveFile,
+  electronSetTitle,
+  electronDomLoaded,
+} from "./services/electronApi";
 
 export default {
   name: "App",
   components: {},
   data() {
     return {
+      timerDebounce: null,
+      viewEditor: true,
+      viewPreview: true,
+      widthTextarea: "50%",
+      widthPreview: "50%",
       file: {
         name: "",
         content: "",
@@ -46,6 +72,7 @@ export default {
       editFile: {
         name: "",
         content: "",
+        html: "",
         path: "",
         stat: {},
         modified: false,
@@ -68,54 +95,48 @@ export default {
     };
   },
   computed: {
-    markdownToHtml() {
-      return marked(this.editFile.content);
+    filePath() {
+      return this.editFile.path;
     },
-    fileContent(){
+    fileContent() {
       return this.editFile.content;
     },
-    fileChanged(){
+    fileChanged() {
       return this.editFile.modified;
-    }
+    },
   },
   watch: {
-    fileContent: function(){
-      this.editFile.modified = this.file.content !== this.editFile.content;
+    fileContent: function () {
+      if (this.timerDebounce) {
+        return;
+      }
+      this.timerDebounce = setTimeout(()=>{
+        this.editFile.html = markdownToHtml(this.editFile.content);
+        this.editFile.modified = this.file.content !== this.editFile.content;
+        clearTimeout(this.timerDebounce)
+        this.timerDebounce = null;
+      }, 500)
+
     },
-    fileChanged: function(value){
-      this.electronFileChanged(value)
+    fileChanged: async function (value) {
+      console.log('file changed');
+      await electronFileChanged(value);
+    },
+    filePath: function (value) {
+      setFilePath(value);
+    },
+    viewPreview: function(value) {
+      this.widthTextarea = value ? "50%" : "100%"
+    },
+    viewEditor: function(value) {
+      this.widthPreview = value ? "50%" : "100%"
     }
   },
   methods: {
-    //ELECTRON
-    //show electron dialog message
-    async electronShowMessage() {
-      await ipcRenderer.invoke("message:box", this.message);
-    },
-    //open file from electron dialog
-    async electronOpenFile(options = {}) {
-      return await ipcRenderer.invoke("open:file", options);
-    },
-    //save file to file system
-    async electronSaveFile(file = { path: "", content: "" }) {
-      return await ipcRenderer.invoke("save:file", file);
-    },
-    //save as file to file system
-    async electronSaveDialog(data = { content: "", options: {} }) {
-      return await ipcRenderer.invoke("saveas:file", data);
-    },
-    //set app title
-    async electronSetTitle(title = "") {
-      return await ipcRenderer.invoke("app:settitle", title);
-    },
-    //notify electron main that the edit file is changed
-    async electronFileChanged(value){
-      return await ipcRenderer.invoke("file:changed", value)
-    },
     //GENERIC HANDLERS
     //Save as file handler
     async saveAsFileHandler() {
-      const response = await this.electronSaveDialog({
+      const response = await electronSaveDialog({
         content: this.editFile.content,
         options: this.electron.saveDialogOptions,
       });
@@ -124,14 +145,23 @@ export default {
         return;
       }
 
+      const additionalFields = {
+        modified: false,
+        html: "",
+      };
       this.file = response.data.file;
-      this.editFile = {...this.file, modified: false}
+      this.editFile = { ...this.file, ...additionalFields };
 
-      await this.electronSetTitle(this.file.path);
+
+      setFilePath(this.editFile.path);
+      this.editFile.html = markdownToHtml(this.editFile.content);
+      this.editFile.changed = false;
+
+      await electronSetTitle(this.file.path);
     },
     //Save file handler
     async saveFileHandler() {
-      const response = await this.electronSaveFile({
+      const response = await electronSaveFile({
         path: this.editFile.path,
         content: this.editFile.content,
       });
@@ -140,10 +170,8 @@ export default {
       console.log("Response > electronSaveFile()", response);
     },
     //Open file handler
-    async openFileHandler(){
-      const response = await this.electronOpenFile(
-        this.electron.openDialogOptions
-      );
+    async openFileHandler() {
+      const response = await electronOpenFile(this.electron.openDialogOptions);
 
       console.log("Response > electronOpenFile()", response);
 
@@ -152,10 +180,21 @@ export default {
         return;
       }
 
+      const additionalFields = {
+        modified: false,
+        html: "",
+      };
       this.file = response.data.file;
-      this.editFile = {...this.file, modified: false}
+      this.editFile = { ...this.file, ...additionalFields };
 
-      await this.electronSetTitle(this.file.path);
+      console.log("this.editFile", this.editFile);
+
+
+      setFilePath(this.editFile.path);
+      this.editFile.html = markdownToHtml(this.editFile.content);
+      this.editFile.changed = false;
+
+      await electronSetTitle(this.file.path);
     },
     //MENU ACTIONS HANDLER
     //Open
@@ -164,11 +203,11 @@ export default {
       await this.openFileHandler();
     },
     //Save
-    async menuSave() {
+    async menuOnSave() {
       console.log("Save");
       //if not modified return
       if (!this.editFile.modified) {
-        return
+        return;
       }
       //if no files are open, open save dialog
       if (this.file.path === "") {
@@ -181,22 +220,48 @@ export default {
       }
     },
     //Save as
-    async menuSaveAs() {
+    async menuOnSaveAs() {
       console.log("Save as");
       await this.saveAsFileHandler();
     },
-    async onClickMenuItem(event, tree) {
+    //On click menu view editor
+    menuOnViewEditor(options) {
+      const checked = options.checked;
+      console.log("View editor", checked);
+      this.viewEditor = checked;
+    },
+    //On click menu view preview
+    menuOnViewPreview(options) {
+      const checked = options.checked;
+      console.log("View preview", checked);
+      this.viewPreview = checked;
+    },
+    async onClickMenuItem(_event, data = { tree: [], options: {} }) {
+      const tree = data.tree;
+      const options = data.options;
       switch (tree[0]) {
         case "File":
           switch (tree[1]) {
             case "Open":
-              await this.menuOnOpen();
+              await this.menuOnOpen(options);
               break;
             case "Save":
-              await this.menuSave();
+              await this.menuOnSave(options);
               break;
             case "Save as..":
-              await this.menuSaveAs();
+              await this.menuOnSaveAs(options);
+              break;
+            default:
+              break;
+          }
+          break;
+        case "View":
+          switch (tree[1]) {
+            case "Editor":
+              this.menuOnViewEditor(options);
+              break;
+            case "Preview":
+              this.menuOnViewPreview(options);
               break;
             default:
               break;
@@ -215,15 +280,10 @@ export default {
           break;
       }
     },
-    async onCloseApp() {
-      console.log('close the app');
-      await this.electronCloseApp()
-    },
   },
   async mounted() {
-    await ipcRenderer.invoke("dom:loaded");
+    await electronDomLoaded();
     ipcRenderer.on("menu:action", this.onClickMenuItem);
-    ipcRenderer.on("app:before-quit", this.onCloseApp);
   },
 };
 </script>
@@ -231,22 +291,35 @@ export default {
 <style>
 html,
 body,
-#main-container {
+#editor {
   margin: 0;
   height: 100%;
 }
 
-#editor,
-#main-container article {
+html {
+  overflow-y: hidden !important;
+}
+
+textarea {
   display: inline-block;
-  width: 49%;
-  height: 100%;
+  width: 50%;
+  height: 100vh;
   vertical-align: top;
   box-sizing: border-box;
   padding: 20px;
+  overflow-y: auto;
+}
+#editor div {
+  display: inline-block;
+  width: 50%;
+  height: 100vh;
+  vertical-align: top;
+  box-sizing: border-box;
+  padding: 20px;
+  overflow-y: auto;
 }
 
-#editor {
+#editor textarea {
   border: none;
   border-right: 1px solid #ccc;
   resize: none;
@@ -255,5 +328,22 @@ body,
   font-size: 14px;
   font-family: "Monaco", courier, monospace;
   padding: 20px;
+  height: 100vh;
+}
+
+code {
+  color: #f66;
+}
+
+.empty {
+  height: 100%;
+  display: grid;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+}
+
+.main-container{
+  height: 100%;
 }
 </style>

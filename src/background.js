@@ -111,8 +111,26 @@ ipcMain.handle("dom:loaded", async (event, jsonObj) => {
   appMenu.createTemplate(app, win, onClickMenuItem);
 });
 
-function onClickMenuItem(tree) {
-  win.webContents.send("menu:action", tree);
+function onClickMenuItem(tree, options) {
+  console.log("value", options);
+  const optionsFiletered = {
+    label: options.menuItem.label || null,
+    type: options.menuItem.type || null,
+    checked: options.menuItem.checked || null,
+    role: options.menuItem.role || null,
+    accelerator: options.menuItem.accelerator || null,
+    sublabel: options.menuItem.sublabel || null,
+    toolTip: options.menuItem.toolTip || null,
+    enabled: options.menuItem.enabled|| null,
+    visible: options.menuItem.visible || null,
+    acceleratorWorksWhenHidden: options.menuItem.acceleratorWorksWhenHidden || null,
+    registerAccelerator: options.menuItem.registerAccelerator || null,
+    commandId: 49,
+  };
+  win.webContents.send("menu:action", {
+    tree: tree,
+    options: optionsFiletered,
+  });
 }
 
 ipcMain.handle("message:box", async (event, message) => {
