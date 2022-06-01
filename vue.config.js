@@ -17,7 +17,7 @@ module.exports = {
     electronBuilder: {
       nodeIntegration: true,
       builderOptions: {
-        "productName": 'markwriter',
+        "productName": 'Markwriter',
         "linux": {
           "target": ["AppImage"]
         },

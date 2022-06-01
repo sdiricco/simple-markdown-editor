@@ -1,7 +1,7 @@
 {
   "name": "markwriter",
   "description": "A simple markdown editor",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
