@@ -25,7 +25,7 @@
         </article>
       </div>
       <!-- Hotkeys -->
-      <v-dialog v-model="showHotkeys" max-width="600">
+      <v-dialog v-model="showHotkeys" max-width="600" >
         <ListHotkeysVue />
       </v-dialog>
 

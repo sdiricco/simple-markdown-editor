@@ -1,5 +1,5 @@
 <template>
-  <v-card>
+  <v-card min-width="600">
     <v-card-title class="text-h5"> Hotkeys </v-card-title>
     <v-card-text>
       <v-container class="pt-8">
