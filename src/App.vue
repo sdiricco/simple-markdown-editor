@@ -275,7 +275,7 @@ export default {
     async menuOnSave() {
       console.log("Save");
       //if not modified return
-      if (!this.editFile.modified) {
+      if (!this.editFile.modified && !this.buildOnSave) {
         return;
       }
       //if no files are open, open save dialog
