@@ -24,6 +24,11 @@
           </pre>
         </article>
       </div>
+      <!-- Hotkeys -->
+      <v-dialog v-model="showHotkeys" max-width="600">
+        <ListHotkeysVue />
+      </v-dialog>
+
       <v-dialog v-model="loadingHtml" persistent width="200">
         <v-card color="primary" dark>
           <v-card-text class="pa-4">
@@ -36,6 +41,21 @@
           </v-card-text>
         </v-card>
       </v-dialog>
+      <!-- Message dialog -->
+      <v-snackbar
+        :width="messageSnackbar.width"
+        :max-width="messageSnackbar.maxWidth"
+        top
+        outlined
+        color="primary"
+        v-model="messageSnackbar.active"
+        :timeout="messageSnackbar.timeout"
+      >
+        <div class="d-flex align-center justify-center pa-0 ma-0">
+          <h4 class="pa-0 ma-0">{{messageSnackbar.message}}</h4>
+        </div>
+      </v-snackbar>
+      <!-- Saving dialog -->
       <v-snackbar
         :width="snackbar.width"
         :max-width="snackbar.maxWidth"
@@ -70,14 +90,16 @@ import {
   electronDomLoaded,
   electronMarkdownParse,
   electronSetMarkdownPath,
-  electronShowError
+  electronShowError,
 } from "./services/electronApi";
+import ListHotkeysVue from "./components/ListHotkeys.vue";
 
 export default {
   name: "App",
-  components: {},
+  components: { ListHotkeysVue },
   data() {
     return {
+      showHotkeys: false,
       loadingHtml: false,
       viewEditor: true,
       viewPreview: true,
@@ -102,6 +124,13 @@ export default {
         timeout: 500,
         width: "50px",
         maxWidth: "50px",
+      },
+      messageSnackbar: {
+        active: false,
+        timeout: 1500,
+        width: "50px",
+        maxWidth: "50px",
+        message: ""
       },
       electron: {
         openDialogOptions: {
@@ -137,9 +166,13 @@ export default {
     },
     viewPreview: function (value) {
       this.widthTextarea = value ? "50%" : "100%";
+      this.messageSnackbar.active = true;
+      this.messageSnackbar.message = value ? "Enable preview" : "Disable preview";
     },
     viewEditor: function (value) {
       this.widthPreview = value ? "50%" : "100%";
+      this.messageSnackbar.active = true;
+      this.messageSnackbar.message = value ? "Enable editor" : "Disable editor";
     },
   },
   methods: {
@@ -196,9 +229,11 @@ export default {
     },
     //Open file handler
     async openFileHandler() {
-      let response = null
+      let response = null;
       if (this.editFile.modified) {
-        response = await electronShowError("File modified. Are you sure to open a new file and discard all changes?");
+        response = await electronShowError(
+          "File modified. Are you sure to open a new file and discard all changes?"
+        );
         if (response.data.canceled) {
           return;
         }
@@ -264,6 +299,9 @@ export default {
     async menuOnBuild() {
       this.buildFileHandler();
     },
+    menuOnHotkeys() {
+      this.showHotkeys = true;
+    },
     async onClickMenuItem(_event, data = { tree: [], options: {} }) {
       const tree = data.tree;
       const options = data.options;
@@ -293,6 +331,9 @@ export default {
               break;
             case "Preview":
               this.menuOnViewPreview(options);
+              break;
+            case "Hotkeys":
+              this.menuOnHotkeys(options);
               break;
             default:
               break;

@@ -42,6 +42,7 @@ function createTemplate(app, window, onClickItem) {
       submenu: [
         {
           label: "Open",
+          accelerator: "Ctrl + O",
           click: (menuItem, browserWindow, event) =>
             onClickItem(["File", "Open"], {
               menuItem: menuItem,
@@ -116,6 +117,7 @@ function createTemplate(app, window, onClickItem) {
         {
           label: "Editor",
           type: "checkbox",
+          accelerator: "Ctrl + Shift + E",
           checked: true,
           click: (menuItem, browserWindow, event) =>
             onClickItem(["View", "Editor"], {
@@ -126,10 +128,22 @@ function createTemplate(app, window, onClickItem) {
         },
         {
           label: "Preview",
+          accelerator: "Ctrl + Shift + P",
           type: "checkbox",
           checked: true,
           click: (menuItem, browserWindow, event) =>
             onClickItem(["View", "Preview"], {
+              menuItem: menuItem,
+              browserWindow: browserWindow,
+              event: event,
+            }),
+        },
+        { type: "separator" },
+        {
+          label: "Hotkeys",
+          accelerator: "Ctrl + Shift + H",
+          click: (menuItem, browserWindow, event) =>
+            onClickItem(["View", "Hotkeys"], {
               menuItem: menuItem,
               browserWindow: browserWindow,
               event: event,
