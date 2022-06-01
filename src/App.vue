@@ -25,7 +25,7 @@
         </article>
       </div>
       <!-- Hotkeys -->
-      <v-dialog v-model="showHotkeys" max-width="600" >
+      <v-dialog v-model="showHotkeys" max-width="600">
         <ListHotkeysVue />
       </v-dialog>
 
@@ -52,7 +52,7 @@
         :timeout="messageSnackbar.timeout"
       >
         <div class="d-flex align-center justify-center pa-0 ma-0">
-          <h4 class="pa-0 ma-0">{{messageSnackbar.message}}</h4>
+          <h4 class="pa-0 ma-0">{{ messageSnackbar.message }}</h4>
         </div>
       </v-snackbar>
       <!-- Saving dialog -->
@@ -99,6 +99,7 @@ export default {
   components: { ListHotkeysVue },
   data() {
     return {
+      buildOnSave: true,
       showHotkeys: false,
       loadingHtml: false,
       viewEditor: true,
@@ -130,7 +131,7 @@ export default {
         timeout: 1500,
         width: "50px",
         maxWidth: "50px",
-        message: ""
+        message: "",
       },
       electron: {
         openDialogOptions: {
@@ -167,7 +168,9 @@ export default {
     viewPreview: function (value) {
       this.widthTextarea = value ? "50%" : "100%";
       this.messageSnackbar.active = true;
-      this.messageSnackbar.message = value ? "Enable preview" : "Disable preview";
+      this.messageSnackbar.message = value
+        ? "Enable preview"
+        : "Disable preview";
     },
     viewEditor: function (value) {
       this.widthPreview = value ? "50%" : "100%";
@@ -224,7 +227,12 @@ export default {
       });
 
       this.file.content = this.editFile.content;
+      if (this.buildOnSave) {
+        await this.buildFileHandler();
+      }
       this.editFile.modified = false;
+
+
       console.log("Response > electronSaveFile()");
     },
     //Open file handler
@@ -286,21 +294,23 @@ export default {
     },
     //On click menu view editor
     menuOnViewEditor(options) {
-      const checked = options.checked;
-      console.log("View editor", checked);
-      this.viewEditor = checked;
+      console.log("View editor", options.checked);
+      this.viewEditor = options.checked;
     },
     //On click menu view preview
     menuOnViewPreview(options) {
-      const checked = options.checked;
-      console.log("View preview", checked);
-      this.viewPreview = checked;
+      console.log("View preview", options.checked);
+      this.viewPreview = options.checked;
     },
     async menuOnBuild() {
       this.buildFileHandler();
     },
     menuOnHotkeys() {
       this.showHotkeys = true;
+    },
+    menuOnBuildOnSave(options){
+      console.log("View editor", options.checked);
+      this.buildOnSave = options.checked;
     },
     async onClickMenuItem(_event, data = { tree: [], options: {} }) {
       const tree = data.tree;
@@ -332,8 +342,14 @@ export default {
             case "Preview":
               this.menuOnViewPreview(options);
               break;
-            case "Hotkeys":
-              this.menuOnHotkeys(options);
+            default:
+              break;
+          }
+          break;
+        case "Settings":
+          switch (tree[1]) {
+            case "Build on save":
+              this.menuOnBuildOnSave(options);
               break;
             default:
               break;
@@ -341,6 +357,9 @@ export default {
           break;
         case "Help":
           switch (tree[1]) {
+            case "Hotkeys":
+              this.menuOnHotkeys(options);
+              break;
             case "Learn More":
               console.log("Learn More");
               break;

@@ -138,17 +138,6 @@ function createTemplate(app, window, onClickItem) {
               event: event,
             }),
         },
-        { type: "separator" },
-        {
-          label: "Hotkeys",
-          accelerator: "Ctrl + Shift + H",
-          click: (menuItem, browserWindow, event) =>
-            onClickItem(["View", "Hotkeys"], {
-              menuItem: menuItem,
-              browserWindow: browserWindow,
-              event: event,
-            }),
-        },
       ],
     },
     {
@@ -175,8 +164,34 @@ function createTemplate(app, window, onClickItem) {
       ],
     },
     {
+      label: "Settings",
+      submenu: [
+        {
+          label: "Build on save",
+          type: "checkbox",
+          checked: true,
+          click: (menuItem, browserWindow, event) =>
+            onClickItem(["Settings", "Build on save"], {
+              menuItem: menuItem,
+              browserWindow: browserWindow,
+              event: event,
+            }),
+        },
+      ]
+    },
+    {
       role: "help",
       submenu: [
+        {
+          label: "Hotkeys",
+          accelerator: "Ctrl + Shift + H",
+          click: (menuItem, browserWindow, event) =>
+            onClickItem(["Help", "Hotkeys"], {
+              menuItem: menuItem,
+              browserWindow: browserWindow,
+              event: event,
+            }),
+        },
         {
           label: "Learn More",
           click: (menuItem, browserWindow, event) =>
