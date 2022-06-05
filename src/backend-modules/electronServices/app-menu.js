@@ -177,6 +177,17 @@ function createTemplate(app, window, onClickItem) {
               event: event,
             }),
         },
+        {
+          label: "Autoscroll",
+          type: "checkbox",
+          checked: true,
+          click: (menuItem, browserWindow, event) =>
+            onClickItem(["Settings", "Autoscroll"], {
+              menuItem: menuItem,
+              browserWindow: browserWindow,
+              event: event,
+            }),
+        },
       ]
     },
     {

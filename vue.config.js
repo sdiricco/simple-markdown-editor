@@ -21,6 +21,14 @@ module.exports = {
         "linux": {
           "target": ["AppImage"]
         },
+        "fileAssociations": [
+          {
+            "ext": ".md",
+            "name": "markdown",
+            "role": "Editor",
+            "perMachine": true
+          }
+        ],
         "extraResources": [
           {
             "from": "./src/extra-resources/",

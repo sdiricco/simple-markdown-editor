@@ -8,6 +8,7 @@
             spellcheck="false"
             v-model="editFile.content"
             :style="{ width: widthTextarea }"
+            class="pb-12"
           ></textarea>
           <div
             v-if="viewPreview"
@@ -15,6 +16,7 @@
             id="preview"
             class="markdown-body"
             v-html="editFile.html"
+            :ref="previewRef"
           ></div>
         </div>
         <article class="empty" v-if="!viewPreview && !viewEditor">
@@ -99,6 +101,8 @@ export default {
   components: { ListHotkeysVue },
   data() {
     return {
+      previewRef: "previewRef",
+      autoscroll: true,
       buildOnSave: true,
       showHotkeys: false,
       loadingHtml: false,
@@ -154,8 +158,19 @@ export default {
     fileChanged() {
       return this.editFile.modified;
     },
+    fileHtml() {
+      return this.editFile.html;
+    },
   },
   watch: {
+    fileHtml: function () {
+      this.$nextTick(() => {
+        if (this.autoscroll) {
+          this.$refs[this.previewRef].scrollTop =
+            this.$refs[this.previewRef].scrollHeight;
+        }
+      });
+    },
     fileContent: function () {
       this.editFile.modified = this.editFile.content !== this.file.content;
     },
@@ -232,7 +247,6 @@ export default {
       }
       this.editFile.modified = false;
 
-
       console.log("Response > electronSaveFile()");
     },
     //Open file handler
@@ -308,9 +322,13 @@ export default {
     menuOnHotkeys() {
       this.showHotkeys = true;
     },
-    menuOnBuildOnSave(options){
+    menuOnBuildOnSave(options) {
       console.log("View editor", options.checked);
       this.buildOnSave = options.checked;
+    },
+    menuOnAutoscroll(options) {
+      console.log("Autoscroll", options.checked);
+      this.autoscroll = options.checked;
     },
     async onClickMenuItem(_event, data = { tree: [], options: {} }) {
       const tree = data.tree;
@@ -350,6 +368,9 @@ export default {
           switch (tree[1]) {
             case "Build on save":
               this.menuOnBuildOnSave(options);
+              break;
+            case "Autoscroll":
+              this.menuOnAutoscroll(options);
               break;
             default:
               break;

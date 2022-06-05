@@ -93,6 +93,13 @@ app.on("ready", async () => {
   createWindow();
 });
 
+//File association
+app.on("open-file", async(event, path) => {
+  event.preventDefault()
+  console.log('You are opening file', path, process.argv);
+  console.log();
+})
+
 // Exit cleanly on request from parent process in development mode.
 if (isDev) {
   if (process.platform === "win32") {
