@@ -25,8 +25,7 @@ module.exports = {
           {
             "ext": ".md",
             "name": "markdown",
-            "role": "Editor",
-            "perMachine": true
+            "role": "Editor"
           }
         ],
         "extraResources": [

@@ -5,6 +5,7 @@ import { markdownToHtml, setFilePath } from "./services/markdown";
 const appMenu = require("./backend-modules/electronServices/app-menu");
 const path = require("path");
 const fs = require("fs/promises");
+const {exsistPath} = require( "./backend-modules/fs-handler/index")
 
 const APP_PATH = app.getPath("exe");
 const APP_ROOT_PATH = path.dirname(APP_PATH);
@@ -15,6 +16,11 @@ let fileChanged = false;
 const UNICODE_CICRLE = "\u25CF";
 
 const isDev = process.env.NODE_ENV !== "production";
+
+let globalFile = {
+  path: undefined,
+  exsist: false,
+}
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -81,7 +87,7 @@ app.on("activate", () => {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on("ready", async () => {
+app.on("ready", async (event, info) => {
   if (isDev && !process.env.IS_TEST) {
     // Install Vue Devtools
     try {
@@ -90,14 +96,20 @@ app.on("ready", async () => {
       console.error("Vue Devtools failed to install:", e.toString());
     }
   }
+  try {
+    globalFile.path = process.argv[1];
+    globalFile.exsist = await exsistPath(globalFile.path);
+  } catch (e) {
+  }
   createWindow();
 });
 
 //File association
-app.on("open-file", async(event, path) => {
-  event.preventDefault()
-  console.log('You are opening file', path, process.argv);
-  console.log();
+app.on("open-file", async (event, path) => {
+  event.preventDefault();
+  fileOpen.pass = true;
+  fileOpen.path = path;
+  fileOpen.argv = process.argv;
 })
 
 // Exit cleanly on request from parent process in development mode.
@@ -191,8 +203,7 @@ ipcMain.handle(
 
     console.log("Electron handle > open:file > result:");
     return result;
-  }
-);
+  });
 
 ipcMain.handle("save:file", async (event, file) => {
   const result = {
@@ -274,9 +285,8 @@ ipcMain.handle("app:settitle", async (event, message) => {
 
 ipcMain.handle("file:changed", (event, value) => {
   fileChanged = value;
-  const title = `${value ? UNICODE_CICRLE : ""} ${appTitle} ${
-    appMessage ? "- " + appMessage : ""
-  }`;
+  const title = `${value ? UNICODE_CICRLE : ""} ${appTitle} ${appMessage ? "- " + appMessage : ""
+    }`;
   win.setTitle(title);
 });
 
@@ -290,7 +300,7 @@ ipcMain.handle("markdown:parse", (event, data) => {
   };
 
   result.data.html = markdownToHtml(data);
-  return result 
+  return result
 });
 
 ipcMain.handle("markdown:setpath", (event, p) => {
@@ -317,13 +327,13 @@ ipcMain.handle("error:box", async (event, data) => {
     },
   };
   try {
-    const _ = await dialog.showMessageBox(win, {
+    const user = await dialog.showMessageBox(win, {
       message: data,
       title: "Save file",
       type: "question",
       buttons: ["Ok", "cancel"]
     })
-    result.data.canceled = _.response > 0
+    result.data.canceled = user.response > 0
   } catch (e) {
     result.error = true;
     result.errorMessage = e.message;
@@ -332,4 +342,69 @@ ipcMain.handle("error:box", async (event, data) => {
   console.log("error:box > result", result);
   return result
 
+})
+
+ipcMain.handle("dialog:openfile", async (event, data = { options: { filters: [{ name: "All Files", extensions: ["*"] }] } }) => {
+
+  const result = {
+    error: false,
+    errorMessage: "",
+    data: {
+      canceled: false,
+      path: null
+    },
+  };
+
+  const dialogOptions = { ...data.options, properties: ["openFile"] };
+
+  //get the path of the selected markdown file
+  let response = await dialog.showOpenDialog(win, dialogOptions);
+
+  //if the path does not exist, return
+  if (response.canceled) {
+    result.data.canceled = true;
+    return result;
+  }
+
+  result.data.path = response.filePaths[0];
+  return result;
+})
+
+ipcMain.handle("file:read", async (evt, data) => {
+  console.log("Electron handle > file:read > data:", data);
+  const result = {
+    error: false,
+    errorMessage: "",
+    data: {
+      file: {
+        name: "",
+        path: "",
+        content: "",
+        stat: {},
+      },
+    },
+  };
+
+  try {
+    const filePath = data.path;
+
+    const stat = await fs.stat(filePath);
+    const name = path.basename(filePath);
+    const buffer = await fs.readFile(filePath);
+    const content = buffer.toString("utf8");
+
+    result.data.file.name = name;
+    result.data.file.path = filePath;
+    result.data.file.content = content;
+    result.data.file.stat = stat;
+  } catch (e) {
+    result.error = true;
+    result.errorMessage = e.message;
+  }
+
+  return result;
+})
+
+ipcMain.handle("app:getfileinfo", async () => {
+  return globalFile;
 })

@@ -1,7 +1,14 @@
 <template>
   <v-app>
     <v-main>
-      <div class="ma-0 pa-0 main-container">
+      <div
+        class="ma-0 pa-0 main-container"
+        @dragenter="this.dragEnter"
+        @dragleave="this.dragLeave"
+        @drag="this.drag"
+        @dragover="this.dragOver"
+        @drop="this.drop"
+      >
         <div id="editor" v-if="viewEditor || viewPreview">
           <textarea
             v-if="viewEditor"
@@ -83,17 +90,7 @@
 
 <script>
 import { ipcRenderer } from "electron";
-import {
-  electronOpenFile,
-  electronFileChanged,
-  electronSaveDialog,
-  electronSaveFile,
-  electronSetTitle,
-  electronDomLoaded,
-  electronMarkdownParse,
-  electronSetMarkdownPath,
-  electronShowError,
-} from "./services/electronApi";
+import * as electronApi from "./services/electronApi";
 import ListHotkeysVue from "./components/ListHotkeys.vue";
 
 export default {
@@ -175,10 +172,10 @@ export default {
       this.editFile.modified = this.editFile.content !== this.file.content;
     },
     fileChanged: async function (value) {
-      await electronFileChanged(value);
+      await electronApi.fileChanged(value);
     },
     filePath: async function (value) {
-      await electronSetMarkdownPath(value);
+      await electronApi.setMarkdownPath(value);
     },
     viewPreview: function (value) {
       this.widthTextarea = value ? "50%" : "100%";
@@ -201,13 +198,13 @@ export default {
         return;
       }
       this.loadingHtml = true;
-      const response = await electronMarkdownParse(this.editFile.content);
+      const response = await electronApi.markdownParse(this.editFile.content);
       this.editFile.html = response.data.html;
       this.loadingHtml = false;
     },
     //Save as file handler
     async saveAsFileHandler() {
-      let response = await electronSaveDialog({
+      let response = await electronApi.saveDialog({
         content: this.editFile.content,
         options: this.electron.saveDialogOptions,
       });
@@ -223,12 +220,12 @@ export default {
       this.file = response.data.file;
       this.editFile = { ...this.file, ...additionalFields };
 
-      await electronSetMarkdownPath(this.editFile.path);
+      await electronApi.setMarkdownPath(this.editFile.path);
       await this.buildFileHandler();
 
       this.editFile.changed = false;
 
-      await electronSetTitle(this.file.path);
+      await electronApi.setTitle(this.file.path);
     },
     //Save file handler
     async saveFileHandler() {
@@ -236,7 +233,7 @@ export default {
         return;
       }
       this.snackbar.active = true;
-      await electronSaveFile({
+      await electronApi.saveFile({
         path: this.editFile.path,
         content: this.editFile.content,
       });
@@ -253,19 +250,22 @@ export default {
     async openFileHandler() {
       let response = null;
       if (this.editFile.modified) {
-        response = await electronShowError(
+        response = await electronApi.showError(
           "File modified. Are you sure to open a new file and discard all changes?"
         );
         if (response.data.canceled) {
           return;
         }
       }
-      response = await electronOpenFile(this.electron.openDialogOptions);
-      console.log("Response > electronOpenFile()");
+      response = await electronApi.openDialogFile({
+        options: this.electron.openDialogOptions,
+      });
+      console.log("Response > electronOpenFile()", response);
       //check if canceled
       if (response.data.canceled) {
         return;
       }
+      response = await electronApi.readFile({ path: response.data.path });
 
       const additionalFields = {
         modified: false,
@@ -274,10 +274,10 @@ export default {
       this.file = response.data.file;
       this.editFile = { ...this.file, ...additionalFields };
 
-      await electronSetMarkdownPath(this.editFile.path);
+      await electronApi.setMarkdownPath(this.editFile.path);
       await this.buildFileHandler();
 
-      await electronSetTitle(this.file.path);
+      await electronApi.setTitle(this.file.path);
     },
     //MENU ACTIONS HANDLER
     //Open
@@ -392,10 +392,82 @@ export default {
           break;
       }
     },
+    drag() {
+      console.log("Drag event");
+    },
+    dragEnter() {
+      console.log("Drag Enter event");
+    },
+    dragLeave() {
+      console.log("Drag Leave event");
+    },
+    dragOver(evt) {
+      evt.preventDefault();
+      evt.stopPropagation();
+      console.log("Drag Over event");
+    },
+    async drop(evt) {
+      console.log("Drop event", evt);
+      evt.preventDefault();
+      evt.stopPropagation();
+
+      const files = evt.dataTransfer.files;
+
+      let response = null;
+
+      //check if there is a file already open
+      if (this.editFile.modified) {
+        response = await electronApi.showError(
+          "File modified. Are you sure to open a new file and discard all changes?"
+        );
+        if (response.data.canceled) {
+          return;
+        }
+      }
+
+      //check if the user select multiple files
+      if (files.length > 1) {
+        await electronApi.showError("Select one file please");
+      }
+      const filePath = files[0].path;
+      console.log("selected file:", filePath);
+
+      response = await electronApi.readFile({ path: filePath });
+
+      const additionalFields = {
+        modified: false,
+        html: "",
+      };
+      this.file = response.data.file;
+      this.editFile = { ...this.file, ...additionalFields };
+
+      await electronApi.setMarkdownPath(this.editFile.path);
+      await this.buildFileHandler();
+
+      await electronApi.setTitle(this.file.path);
+    },
   },
   async mounted() {
-    await electronDomLoaded();
     ipcRenderer.on("menu:action", this.onClickMenuItem);
+    await electronApi.domLoaded();
+    //check if app is open with a file
+    const fileinfo = await ipcRenderer.invoke("app:getfileinfo");
+    if (!fileinfo.exsist) {
+      return;
+    }
+    const response = await electronApi.readFile({ path: fileinfo.path });
+
+    const additionalFields = {
+      modified: false,
+      html: "",
+    };
+    this.file = response.data.file;
+    this.editFile = { ...this.file, ...additionalFields };
+
+    await electronApi.setMarkdownPath(this.editFile.path);
+    await this.buildFileHandler();
+
+    await electronApi.setTitle(this.file.path);
   },
 };
 </script>
