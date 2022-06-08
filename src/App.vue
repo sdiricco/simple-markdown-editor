@@ -191,11 +191,9 @@ export default {
     },
   },
   methods: {
-    ...mapActions({
-      markdownParse: "main/markdownParse",
-    }),
+    ...mapActions(['openFileFromDialog', 'markdownParse']),
     //GENERIC HANDLERS
-    //Build markdown
+    //Build markdownm
     async buildFileHandler() {
       if (this.loadingHtml) {
         return;
@@ -287,6 +285,7 @@ export default {
     async menuOnOpen() {
       console.log("Open");
       await this.openFileHandler();
+      /* await this.openFileFromDialog({openDialogOptions: this.openDialogOptions}) */
     },
     //Save
     async menuOnSave() {
