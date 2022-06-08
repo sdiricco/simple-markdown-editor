@@ -92,7 +92,7 @@
 import { ipcRenderer } from "electron";
 import * as electronApi from "./services/electronApi";
 import ListHotkeysVue from "./components/ListHotkeys.vue";
-
+import { mapActions } from "vuex";
 export default {
   name: "App",
   components: { ListHotkeysVue },
@@ -191,6 +191,9 @@ export default {
     },
   },
   methods: {
+    ...mapActions({
+      markdownParse: "main/markdownParse",
+    }),
     //GENERIC HANDLERS
     //Build markdown
     async buildFileHandler() {
@@ -463,6 +466,8 @@ export default {
     };
     this.file = response.data.file;
     this.editFile = { ...this.file, ...additionalFields };
+
+    await this.markdownParse({content: "# ciao"})
 
     await electronApi.setMarkdownPath(this.editFile.path);
     await this.buildFileHandler();
