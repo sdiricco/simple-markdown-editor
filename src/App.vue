@@ -92,7 +92,8 @@
 import { ipcRenderer } from "electron";
 import * as electronApi from "./services/electronApi";
 import ListHotkeysVue from "./components/ListHotkeys.vue";
-import { mapActions } from "vuex";
+import { mapActions, mapGetters } from "vuex";
+import * as validation from "./services/validation";
 export default {
   name: "App",
   components: { ListHotkeysVue },
@@ -146,6 +147,10 @@ export default {
     };
   },
   computed: {
+    ...mapGetters({
+      getFile: 'main/getFile',
+      getPreviewer: 'main/getPreviewer'
+    }),
     filePath() {
       return this.editFile.path;
     },
@@ -191,146 +196,40 @@ export default {
     },
   },
   methods: {
-    ...mapActions(['openFileFromDialog', 'markdownParse']),
-    //GENERIC HANDLERS
-    //Build markdownm
-    async buildFileHandler() {
-      if (this.loadingHtml) {
-        return;
-      }
-      this.loadingHtml = true;
-      const response = await electronApi.markdownParse(this.editFile.content);
-      this.editFile.html = response.data.html;
-      this.loadingHtml = false;
-    },
-    //Save as file handler
-    async saveAsFileHandler() {
-      let response = await electronApi.saveDialog({
-        content: this.editFile.content,
-        options: this.electron.saveDialogOptions,
-      });
-      console.log("Response > electronSaveDialog()");
-      if (response.data.canceled) {
-        return;
-      }
-
-      const additionalFields = {
-        modified: false,
-        html: "",
-      };
-      this.file = response.data.file;
-      this.editFile = { ...this.file, ...additionalFields };
-
-      await electronApi.setMarkdownPath(this.editFile.path);
-      await this.buildFileHandler();
-
-      this.editFile.changed = false;
-
-      await electronApi.setTitle(this.file.path);
-    },
-    //Save file handler
-    async saveFileHandler() {
-      if (this.snackbar.active) {
-        return;
-      }
-      this.snackbar.active = true;
-      await electronApi.saveFile({
-        path: this.editFile.path,
-        content: this.editFile.content,
-      });
-
-      this.file.content = this.editFile.content;
-      if (this.buildOnSave) {
-        await this.buildFileHandler();
-      }
-      this.editFile.modified = false;
-
-      console.log("Response > electronSaveFile()");
-    },
-    //Open file handler
-    async openFileHandler() {
-      let response = null;
-      if (this.editFile.modified) {
-        response = await electronApi.showError(
-          "File modified. Are you sure to open a new file and discard all changes?"
-        );
-        if (response.data.canceled) {
-          return;
-        }
-      }
-      response = await electronApi.openDialogFile({
-        options: this.electron.openDialogOptions,
-      });
-      console.log("Response > electronOpenFile()", response);
-      //check if canceled
-      if (response.data.canceled) {
-        return;
-      }
-      response = await electronApi.readFile({ path: response.data.path });
-
-      const additionalFields = {
-        modified: false,
-        html: "",
-      };
-      this.file = response.data.file;
-      this.editFile = { ...this.file, ...additionalFields };
-
-      await electronApi.setMarkdownPath(this.editFile.path);
-      await this.buildFileHandler();
-
-      await electronApi.setTitle(this.file.path);
-    },
+    ...mapActions({
+      buildMarkdownFile: 'main/buildMarkdownFile'
+    }),
     //MENU ACTIONS HANDLER
-    //Open
+    //On Click: Menu > File > Open
     async menuOnOpen() {
       console.log("Open");
-      await this.openFileHandler();
-      /* await this.openFileFromDialog({openDialogOptions: this.openDialogOptions}) */
+      await this.openFileFromDialog();
     },
-    //Save
+    //On click: Menu > Save
     async menuOnSave() {
-      console.log("Save");
-      //if not modified return
-      if (!this.editFile.modified && !this.buildOnSave) {
-        return;
-      }
-      //if no files are open, open save dialog
-      if (this.file.path === "") {
-        await this.saveAsFileHandler();
-      }
-      //if the file is open, simply save
-      else {
-        await this.saveFileHandler();
-      }
     },
-    //Save as
+    //On click: Menu > Save as
     async menuOnSaveAs() {
-      console.log("Save as");
-      await this.saveAsFileHandler();
+      console.log("Click on Menu > File > Save as");
     },
-    //On click menu view editor
+    //On click: Menu > View > editor
     menuOnViewEditor(options) {
+      console.log("Click on Menu > View Editor");
       console.log("View editor", options.checked);
-      this.viewEditor = options.checked;
     },
-    //On click menu view preview
+    //On click: Menu > view preview
     menuOnViewPreview(options) {
       console.log("View preview", options.checked);
-      this.viewPreview = options.checked;
     },
     async menuOnBuild() {
-      this.buildFileHandler();
     },
     menuOnHotkeys() {
-      this.showHotkeys = true;
     },
     menuOnBuildOnSave(options) {
       console.log("View editor", options.checked);
-      this.buildOnSave = options.checked;
     },
     menuOnAutoscroll(options) {
       console.log("Autoscroll", options.checked);
-      this.autoscroll = options.checked;
     },
     async onClickMenuItem(_event, data = { tree: [], options: {} }) {
       const tree = data.tree;
@@ -339,15 +238,19 @@ export default {
         case "File":
           switch (tree[1]) {
             case "Open":
+              console.log("Click on Menu > File > Open");
               await this.menuOnOpen(options);
               break;
             case "Build":
+              console.log("Click on Menu > File > Build");
               await this.menuOnBuild(options);
               break;
             case "Save":
+              console.log("Click on Menu > File > Save");
               await this.menuOnSave(options);
               break;
             case "Save as..":
+              console.log("Click on Menu > File > Save as..");
               await this.menuOnSaveAs(options);
               break;
             default:
@@ -357,9 +260,11 @@ export default {
         case "View":
           switch (tree[1]) {
             case "Editor":
+              console.log("Click on Menu > View > Editor");
               this.menuOnViewEditor(options);
               break;
             case "Preview":
+              console.log("Click on Menu > View > Preview");
               this.menuOnViewPreview(options);
               break;
             default:
@@ -369,9 +274,11 @@ export default {
         case "Settings":
           switch (tree[1]) {
             case "Build on save":
+              console.log("Click on Menu > Settings > Build on save");
               this.menuOnBuildOnSave(options);
               break;
             case "Autoscroll":
+              console.log("Click on Menu > Settings > Autoscroll");
               this.menuOnAutoscroll(options);
               break;
             default:
@@ -381,10 +288,11 @@ export default {
         case "Help":
           switch (tree[1]) {
             case "Hotkeys":
+              console.log("Click on Menu > Help > Hotkeys");
               this.menuOnHotkeys(options);
               break;
             case "Learn More":
-              console.log("Learn More");
+              console.log("Click on Menu > Help > Learn More");
               break;
             default:
               break;
@@ -415,63 +323,36 @@ export default {
 
       const files = evt.dataTransfer.files;
 
-      let response = null;
-
-      //check if there is a file already open
-      if (this.editFile.modified) {
-        response = await electronApi.showError(
-          "File modified. Are you sure to open a new file and discard all changes?"
-        );
-        if (response.data.canceled) {
-          return;
-        }
-      }
-
-      //check if the user select multiple files
-      if (files.length > 1) {
-        await electronApi.showError("Select one file please");
-      }
-      const filePath = files[0].path;
-      console.log("selected file:", filePath);
-
-      response = await electronApi.readFile({ path: filePath });
-
-      const additionalFields = {
-        modified: false,
-        html: "",
-      };
-      this.file = response.data.file;
-      this.editFile = { ...this.file, ...additionalFields };
-
-      await electronApi.setMarkdownPath(this.editFile.path);
-      await this.buildFileHandler();
-
-      await electronApi.setTitle(this.file.path);
+      await this.openFileFromDragAndDrop({files: files})
     },
   },
-  async mounted() {
-    ipcRenderer.on("menu:action", this.onClickMenuItem);
-    await electronApi.domLoaded();
-    //check if app is open with a file
-    const fileinfo = await ipcRenderer.invoke("app:getfileinfo");
-    if (!fileinfo.exsist) {
+  async init(){
+    //get the app args
+    const response = await electronApi.getAppArgs();
+    //validate args
+    const result = await validation.validateArgs(response.data.args);
+
+    //if there are not args, simply return
+    if (!result.data.exsist) {
+      return;  
+    }
+    //if there are error during validation, show message box and return
+    if (result.error) {
+      await electronApi.showError(`"Error during validate args: ${result.errorMessage}`);
       return;
     }
-    const response = await electronApi.readFile({ path: fileinfo.path });
 
-    const additionalFields = {
-      modified: false,
-      html: "",
-    };
-    this.file = response.data.file;
-    this.editFile = { ...this.file, ...additionalFields };
+    
 
-    await this.markdownParse({content: "# ciao"})
 
-    await electronApi.setMarkdownPath(this.editFile.path);
-    await this.buildFileHandler();
 
-    await electronApi.setTitle(this.file.path);
+
+  },
+  async created() {
+    ipcRenderer.on("menu:action", this.onClickMenuItem);
+    await electronApi.domLoaded();
+    await this.init()
+
   },
 };
 </script>

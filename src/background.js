@@ -17,10 +17,7 @@ const UNICODE_CICRLE = "\u25CF";
 
 const isDev = process.env.NODE_ENV !== "production";
 
-let globalFile = {
-  path: undefined,
-  exsist: false,
-}
+let appArgs = '';
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -96,11 +93,7 @@ app.on("ready", async (event, info) => {
       console.error("Vue Devtools failed to install:", e.toString());
     }
   }
-  try {
-    globalFile.path = process.argv[1];
-    globalFile.exsist = await exsistPath(globalFile.path);
-  } catch (e) {
-  }
+  appArgs = process.argv;
   createWindow();
 });
 
@@ -405,6 +398,13 @@ ipcMain.handle("file:read", async (evt, data) => {
   return result;
 })
 
-ipcMain.handle("app:getfileinfo", async () => {
-  return globalFile;
+ipcMain.handle("app:getargs", async () => {
+  const result = {
+    error: false,
+    errorMessage: "",
+    data: {
+      args: appArgs
+    },
+  };
+  return result;
 })

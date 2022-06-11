@@ -44,3 +44,7 @@ export async function openDialogFile(data = {options: {}}) {
 export async function readFile(data = {path: ''}) {
   return await ipcRenderer.invoke("file:read", data);
 }
+
+export async function getAppArgs(){
+  return await ipcRenderer.invoke("app:getargs");
+}
