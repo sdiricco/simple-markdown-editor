@@ -22,7 +22,7 @@
             :style="{ width: widthPreview }"
             id="preview"
             class="markdown-body"
-            v-html="editFile.html"
+            v-html="getPreviewer.content"
             :ref="previewRef"
           ></div>
         </div>
@@ -148,8 +148,8 @@ export default {
   },
   computed: {
     ...mapGetters({
-      getFile: 'main/getFile',
-      getPreviewer: 'main/getPreviewer'
+      getFile: "main/getFile",
+      getPreviewer: "main/getPreviewer",
     }),
     filePath() {
       return this.editFile.path;
@@ -197,7 +197,7 @@ export default {
   },
   methods: {
     ...mapActions({
-      buildMarkdownFile: 'main/buildMarkdownFile'
+      loadMarkdownFile: "main/loadMarkdownFile",
     }),
     //MENU ACTIONS HANDLER
     //On Click: Menu > File > Open
@@ -206,8 +206,7 @@ export default {
       await this.openFileFromDialog();
     },
     //On click: Menu > Save
-    async menuOnSave() {
-    },
+    async menuOnSave() {},
     //On click: Menu > Save as
     async menuOnSaveAs() {
       console.log("Click on Menu > File > Save as");
@@ -221,10 +220,8 @@ export default {
     menuOnViewPreview(options) {
       console.log("View preview", options.checked);
     },
-    async menuOnBuild() {
-    },
-    menuOnHotkeys() {
-    },
+    async menuOnBuild() {},
+    menuOnHotkeys() {},
     menuOnBuildOnSave(options) {
       console.log("View editor", options.checked);
     },
@@ -318,41 +315,65 @@ export default {
     },
     async drop(evt) {
       console.log("Drop event", evt);
-      evt.preventDefault();
-      evt.stopPropagation();
 
-      const files = evt.dataTransfer.files;
+      try {
+        evt.preventDefault();
+        evt.stopPropagation();
 
-      await this.openFileFromDragAndDrop({files: files})
+        const files = evt.dataTransfer.files;
+        const filePaths = Object.values(files).map((f) => f.path);
+        console.log("files", filePaths);
+
+        await validation.validateFiles(filePaths);
+        await this.loadMarkdownFile({ path: filePaths[0] });
+
+
+      } catch (e) {
+        console.log(e.message);
+        console.log(e.details);
+        await electronApi.showError(
+          `Error during the drop files: ${e.message}\n\n${
+            e.details ? "Details: " + e.details : ""
+          }`
+        );
+      }
+
+    },
+    async init() {
+      try {
+        //get the app args
+        const response = await electronApi.getAppArgs();
+
+        //If there are not args, simply returns
+        if (!response.args) {
+          console.log("App launched without any files");
+          return;
+        }
+
+        //validate args
+        await validation.validateArgs(response.args, { multipleArgs: false });
+        const markdownFilePath = response.data.args[0];
+        await this.loadMarkdownFile({ path: markdownFilePath });
+      } catch (e) {
+        console.log(e.message);
+        console.log(e.details);
+        throw e;
+      }
     },
   },
-  async init(){
-    //get the app args
-    const response = await electronApi.getAppArgs();
-    //validate args
-    const result = await validation.validateArgs(response.data.args);
 
-    //if there are not args, simply return
-    if (!result.data.exsist) {
-      return;  
-    }
-    //if there are error during validation, show message box and return
-    if (result.error) {
-      await electronApi.showError(`"Error during validate args: ${result.errorMessage}`);
-      return;
-    }
-
-    
-
-
-
-
-  },
   async created() {
     ipcRenderer.on("menu:action", this.onClickMenuItem);
-    await electronApi.domLoaded();
-    await this.init()
-
+    try {
+      await electronApi.domLoaded();
+      await this.init();
+    } catch (e) {
+      await electronApi.showError(
+        `Error during the initialization phase of the app: ${e.message}\n\n${
+          e.details ? "Details: " + e.details : ""
+        }`
+      );
+    }
   },
 };
 </script>

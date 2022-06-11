@@ -5,7 +5,6 @@ import { markdownToHtml, setFilePath } from "./services/markdown";
 const appMenu = require("./backend-modules/electronServices/app-menu");
 const path = require("path");
 const fs = require("fs/promises");
-const {exsistPath} = require( "./backend-modules/fs-handler/index")
 
 const APP_PATH = app.getPath("exe");
 const APP_ROOT_PATH = path.dirname(APP_PATH);
@@ -17,7 +16,7 @@ const UNICODE_CICRLE = "\u25CF";
 
 const isDev = process.env.NODE_ENV !== "production";
 
-let appArgs = '';
+let appArgs = "";
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -25,6 +24,7 @@ protocol.registerSchemesAsPrivileged([
 ]);
 
 let win;
+
 
 async function createWindow() {
   // Create the browser window.
@@ -92,8 +92,10 @@ app.on("ready", async (event, info) => {
     } catch (e) {
       console.error("Vue Devtools failed to install:", e.toString());
     }
+  }else{
+    //get args only in production mode
+    appArgs = process.argv;
   }
-  appArgs = process.argv;
   createWindow();
 });
 
@@ -103,7 +105,7 @@ app.on("open-file", async (event, path) => {
   fileOpen.pass = true;
   fileOpen.path = path;
   fileOpen.argv = process.argv;
-})
+});
 
 // Exit cleanly on request from parent process in development mode.
 if (isDev) {
@@ -120,8 +122,17 @@ if (isDev) {
   }
 }
 
-ipcMain.handle("dom:loaded", async (event, jsonObj) => {
+ipcMain.handle("dom:loaded", async () => {
+  const result = {
+    error: false,
+    errorMessage: "",
+    data: {
+      success: true,
+      info: "created menu template"
+    },
+  };
   appMenu.createTemplate(app, win, onClickMenuItem);
+  return result
 });
 
 function onClickMenuItem(tree, options) {
@@ -196,7 +207,8 @@ ipcMain.handle(
 
     console.log("Electron handle > open:file > result:");
     return result;
-  });
+  }
+);
 
 ipcMain.handle("save:file", async (event, file) => {
   const result = {
@@ -278,8 +290,9 @@ ipcMain.handle("app:settitle", async (event, message) => {
 
 ipcMain.handle("file:changed", (event, value) => {
   fileChanged = value;
-  const title = `${value ? UNICODE_CICRLE : ""} ${appTitle} ${appMessage ? "- " + appMessage : ""
-    }`;
+  const title = `${value ? UNICODE_CICRLE : ""} ${appTitle} ${
+    appMessage ? "- " + appMessage : ""
+  }`;
   win.setTitle(title);
 });
 
@@ -288,12 +301,12 @@ ipcMain.handle("markdown:parse", (event, data) => {
     error: false,
     errorMessage: "",
     data: {
-      html: "",
+      content: "",
     },
   };
 
-  result.data.html = markdownToHtml(data);
-  return result
+  result.data.content = markdownToHtml(data);
+  return result;
 });
 
 ipcMain.handle("markdown:setpath", (event, p) => {
@@ -309,14 +322,14 @@ ipcMain.handle("markdown:setpath", (event, p) => {
   result.data.path = p;
 
   return result;
-})
+});
 
 ipcMain.handle("error:box", async (event, data) => {
   const result = {
     error: false,
     errorMessage: "",
     data: {
-      canceled: false
+      canceled: false,
     },
   };
   try {
@@ -324,44 +337,48 @@ ipcMain.handle("error:box", async (event, data) => {
       message: data,
       title: "Save file",
       type: "question",
-      buttons: ["Ok", "cancel"]
-    })
-    result.data.canceled = user.response > 0
+      buttons: ["Ok", "cancel"],
+    });
+    result.data.canceled = user.response > 0;
   } catch (e) {
     result.error = true;
     result.errorMessage = e.message;
   }
 
   console.log("error:box > result", result);
-  return result
+  return result;
+});
 
-})
+ipcMain.handle(
+  "dialog:openfile",
+  async (
+    event,
+    data = { options: { filters: [{ name: "All Files", extensions: ["*"] }] } }
+  ) => {
+    const result = {
+      error: false,
+      errorMessage: "",
+      data: {
+        canceled: false,
+        path: null,
+      },
+    };
 
-ipcMain.handle("dialog:openfile", async (event, data = { options: { filters: [{ name: "All Files", extensions: ["*"] }] } }) => {
+    const dialogOptions = { ...data.options, properties: ["openFile"] };
 
-  const result = {
-    error: false,
-    errorMessage: "",
-    data: {
-      canceled: false,
-      path: null
-    },
-  };
+    //get the path of the selected markdown file
+    let response = await dialog.showOpenDialog(win, dialogOptions);
 
-  const dialogOptions = { ...data.options, properties: ["openFile"] };
+    //if the path does not exist, return
+    if (response.canceled) {
+      result.data.canceled = true;
+      return result;
+    }
 
-  //get the path of the selected markdown file
-  let response = await dialog.showOpenDialog(win, dialogOptions);
-
-  //if the path does not exist, return
-  if (response.canceled) {
-    result.data.canceled = true;
+    result.data.path = response.filePaths[0];
     return result;
   }
-
-  result.data.path = response.filePaths[0];
-  return result;
-})
+);
 
 ipcMain.handle("file:read", async (evt, data) => {
   console.log("Electron handle > file:read > data:", data);
@@ -396,15 +413,15 @@ ipcMain.handle("file:read", async (evt, data) => {
   }
 
   return result;
-})
+});
 
 ipcMain.handle("app:getargs", async () => {
   const result = {
     error: false,
     errorMessage: "",
     data: {
-      args: appArgs
+      args: appArgs,
     },
   };
   return result;
-})
+});

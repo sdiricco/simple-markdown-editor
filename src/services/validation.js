@@ -1,39 +1,55 @@
-import * as nodeApi from './nodeApi'
+import * as nodeApi from "./nodeApi";
+import { ValidationError } from "./errors";
 
-
-
-export async function validateArgs(args = [], {multipleArgs = false, type = "path"} = {}) {
+export async function validateArgs(
+  args = [],
+  { multipleArgs = false, type = "path" } = {}
+) {
   let result = {
-    error: false,
-    errorMessage: "",
     data: {
+      success: true,
       validation: true,
-      exsist: false,
-    }
+    },
   };
-  //if the app was opened without files
-  if (!args) {
-    return result;
-  };
-
-  result.data.exsist = true;
-
   //if the app was opened wit multiple files
   if (args.length > 1 && !multipleArgs) {
-    result.error = true;
-    result.errorMessage = "Multiple args";
-    result.data.validation = false;
-    return result;
+    throw new ValidationError("multiple args not permitted", {
+      details: `args: ${args.length}, ${args.join(", ")}`,
+    });
   }
-  if (type === 'path') {
-    for (p of args){
+  if (type !== "path") {
+    throw new ValidationError(`Only type = path is implemented`);
+  }
+  if (type === "path") {
+    for (const p of args) {
       const validPath = await nodeApi.exsistPath(p);
       if (!validPath) {
-        result.error = true;
-        result.errorMessage = `${p} is not a valid path`;
-        result.validation = false;
-        return;
+        throw new ValidationError(`${p} is not a valid path`);
       }
+    }
+  }
+  return result;
+}
+
+export async function validateFiles(
+  filePaths = [],
+  { multipleFile = false } = {}
+) {
+  let result = {
+    data: {
+      success: true,
+      validation: true,
+    },
+  };
+  if (filePaths.length > 1 && !multipleFile) {
+    throw new ValidationError("multiple files not permitted", {
+      details: `files: ${filePaths.length}, ${filePaths.join(", ")}`,
+    });
+  }
+  for (const p of filePaths) {
+    const validPath = await nodeApi.exsistPath(p);
+    if (!validPath) {
+      throw new ValidationError(`${p} is not a valid path`);
     }
   }
   return result;
