@@ -1,10 +1,12 @@
 import { ipcRenderer } from "electron";
 import { ElectronError } from "./errors";
 
+
+
 //ELECTRON
 //show electron dialog message
-export async function showMessage(message) {
-  const response =  await ipcRenderer.invoke("message:box", message);
+export async function showMessage(data = {options: {}}) {
+  const response =  await ipcRenderer.invoke("electron/show-message-box", data);
   if (response.error) {
     throw new ElectronError(response.errorMessage)
   }
@@ -26,7 +28,7 @@ export async function saveFile(file = { path: "", content: "" }) {
   return response.data;
 }
 //save as file to file system
-export async function saveDialog(data = { content: "", options: {} }) {
+export async function saveDialog(data = { options: {} }) {
   const response = await ipcRenderer.invoke("saveas:file", data);
   if (response.error) {
     throw new ElectronError(response.errorMessage)

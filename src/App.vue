@@ -13,7 +13,8 @@
           <textarea
             v-if="viewEditor"
             spellcheck="false"
-            v-model="editFile.content"
+            :value="getEditedFile.content"
+            @input="onInputTextIDE"
             :style="{ width: widthTextarea }"
             class="pb-12"
           ></textarea>
@@ -22,7 +23,7 @@
             :style="{ width: widthPreview }"
             id="preview"
             class="markdown-body"
-            v-html="getPreviewer.content"
+            v-html="getBuiltFile.content"
             :ref="previewRef"
           ></div>
         </div>
@@ -38,7 +39,7 @@
         <ListHotkeysVue />
       </v-dialog>
 
-      <v-dialog v-model="loadingHtml" persistent width="200">
+      <v-dialog :value="getIsAppLoading" persistent width="200">
         <v-card color="primary" dark>
           <v-card-text class="pa-4">
             Building..
@@ -92,8 +93,9 @@
 import { ipcRenderer } from "electron";
 import * as electronApi from "./services/electronApi";
 import ListHotkeysVue from "./components/ListHotkeys.vue";
-import { mapActions, mapGetters } from "vuex";
+import { mapActions, mapGetters, mapMutations } from "vuex";
 import * as validation from "./services/validation";
+import * as electronWrapper from "./utils/electronWrapper"
 export default {
   name: "App",
   components: { ListHotkeysVue },
@@ -135,22 +137,21 @@ export default {
         maxWidth: "50px",
         message: "",
       },
-      electron: {
-        openDialogOptions: {
-          filters: [{ name: "Markdown", extensions: ["md", "markdown"] }],
-        },
-        saveDialogOptions: {
-          defaultPath: "Document.md",
-          filters: [{ name: "Markdown", extensions: ["md", "markdown"] }],
-        },
-      },
+
     };
   },
   computed: {
     ...mapGetters({
-      getFile: "main/getFile",
+      getInitialFile: "main/getInitialFile",
+      getEditedFile: "main/getEditedFile",
+      getBuiltFile: "main/getBuiltFile",
       getPreviewer: "main/getPreviewer",
+      getIsFileModified: "main/getIsFileModified",
+      getIsAppLoading: "main/getIsAppLoading",
     }),
+    getInitialFilePath() {
+      return this.getInitialFile.path;
+    },
     filePath() {
       return this.editFile.path;
     },
@@ -173,13 +174,11 @@ export default {
         }
       });
     },
-    fileContent: function () {
-      this.editFile.modified = this.editFile.content !== this.file.content;
-    },
-    fileChanged: async function (value) {
+
+    getIsFileModified: async function (value) {
       await electronApi.fileChanged(value);
     },
-    filePath: async function (value) {
+    getInitialFilePath: async function (value) {
       await electronApi.setMarkdownPath(value);
     },
     viewPreview: function (value) {
@@ -198,18 +197,62 @@ export default {
   methods: {
     ...mapActions({
       loadMarkdownFile: "main/loadMarkdownFile",
+      saveFile: "main/saveFile",
     }),
+    ...mapMutations({
+      setEditedFile: "main/setEditedFile",
+    }),
+    onInputTextIDE(event) {
+      console.log("@input");
+      console.log(event.target.value);
+      const content = event.target.value;
+      this.setEditedFile({ content: content });
+    },
     //MENU ACTIONS HANDLER
     //On Click: Menu > File > Open
     async menuOnOpen() {
-      console.log("Open");
-      await this.openFileFromDialog();
+      try {
+        //if file has changed, show message info.
+        //1 - if user click on cancel, siply return
+        //2 - if user click on ok, continue choosing file from open dialog
+        if (this.getIsFileModified) {
+          const response = await electronApi.showMessage(
+            "The file has changed. Are you sure you want to open a new file without saving?"
+          );
+          if (response.canceled) {
+            return;
+          }
+        }
+        //chose a file from open dialog
+        //1 - if canceled, simply return
+        //2 - if choosing a file, return the path
+        const response = await electronApi.openDialogFile();
+        if (response.canceled) {
+          return;
+        }
+
+        await validation.validateFile(response.path);
+
+        await this.loadMarkdownFile({ path: response.path });
+      } catch (e) {
+        await electronApi.showError(
+          `Error during opening file: ${e.message}\n\n${
+            e.details ? "Details: " + e.details : ""
+          }`
+        );
+      }
     },
     //On click: Menu > Save
     async menuOnSave() {},
     //On click: Menu > Save as
     async menuOnSaveAs() {
-      console.log("Click on Menu > File > Save as");
+      const response = await electronApi.saveDialog({
+        options: this.saveDialogOptions,
+      });
+      if (response.canceled) {
+        return;
+      }
+      await this.saveFile({ path: response.path });
     },
     //On click: Menu > View > editor
     menuOnViewEditor(options) {
@@ -326,8 +369,6 @@ export default {
 
         await validation.validateFiles(filePaths);
         await this.loadMarkdownFile({ path: filePaths[0] });
-
-
       } catch (e) {
         console.log(e.message);
         console.log(e.details);
@@ -337,7 +378,6 @@ export default {
           }`
         );
       }
-
     },
     async init() {
       try {
@@ -350,8 +390,9 @@ export default {
           return;
         }
 
-        //validate args
+        //if there are args, validate them
         await validation.validateArgs(response.args, { multipleArgs: false });
+        //the args rapresents the path of markdown files
         const markdownFilePath = response.data.args[0];
         await this.loadMarkdownFile({ path: markdownFilePath });
       } catch (e) {
@@ -367,6 +408,8 @@ export default {
     try {
       await electronApi.domLoaded();
       await this.init();
+      const result = await electronWrapper.showMessageQuestion('my message');
+      console.log("result", result);
     } catch (e) {
       await electronApi.showError(
         `Error during the initialization phase of the app: ${e.message}\n\n${

@@ -31,6 +31,20 @@ export async function validateArgs(
   return result;
 }
 
+export async function validateFile(filePath = "") {
+  let result = {
+    data: {
+      success: true,
+      validation: true,
+    },
+  };
+  const validPath = await nodeApi.exsistPath(filePath);
+  if (!validPath) {
+    throw new ValidationError(`${filePath} is not a valid path`);
+  }
+  return result
+}
+
 export async function validateFiles(
   filePaths = [],
   { multipleFile = false } = {}

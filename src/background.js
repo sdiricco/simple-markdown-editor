@@ -158,8 +158,23 @@ function onClickMenuItem(tree, options) {
   });
 }
 
-ipcMain.handle("message:box", async (event, message) => {
-  dialog.showMessageBoxSync(win, { message: message, type: "info" });
+ipcMain.handle("electron/show-message-box", async (event, data = {options: {}}) => {
+  const result = {
+    error: false,
+    errorMessage: "",
+    data: {
+      response: null,
+      checkboxChecked: null
+    },
+  };
+  try {
+    const dialogOptions = {...data.options}
+    result.data = await dialog.showMessageBox(win, dialogOptions)
+  } catch (e) {
+    result.error = true;
+    result.errorMessage = e.message
+  }
+  return result;
 });
 
 ipcMain.handle(
@@ -233,51 +248,31 @@ ipcMain.handle("save:file", async (event, file) => {
 
 ipcMain.handle(
   "saveas:file",
-  async (event, data = { content: "", options: {} }) => {
+  async (event, data = { options: {} }) => {
     const result = {
       error: false,
       errorMessage: "",
       data: {
         canceled: false,
-        file: {
-          stat: {},
-          name: "",
-          path: "",
-          content: "",
-        },
+        path: '',
       },
     };
 
-    console.log("Electron handle > saveas:file > params:");
+    const dialogOptions = {...data.options};
 
-    const dialogOptions = { ...data.options };
-    console.log("showSaveDialogSync > dialogOptions", dialogOptions);
-
-    //get the path of the selected markdown file
     try {
       let dialogResponse = await dialog.showSaveDialog(win, dialogOptions);
       if (dialogResponse.canceled) {
         result.data.canceled = true;
         return result;
       }
+      result.data.path = dialogResponse.filePath;
 
-      const content = data.content;
-      const filePath = dialogResponse.filePath;
-      await fs.writeFile(filePath, content);
-      const name = path.basename(filePath);
-      const stat = await fs.stat(filePath);
-
-      result.data.file.name = name;
-      result.data.file.content = content;
-      result.data.file.path = filePath;
-      result.data.file.stat = stat;
     } catch (e) {
-      console.log("Error > electron hanlde > saveas:file", e);
       result.error = true;
       result.errorMessage = e.message;
     }
 
-    console.log("Electron handle > save:file > result:");
     return result;
   }
 );
