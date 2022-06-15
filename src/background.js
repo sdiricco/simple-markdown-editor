@@ -150,7 +150,7 @@ function onClickMenuItem(tree, options) {
     acceleratorWorksWhenHidden:
       options.menuItem.acceleratorWorksWhenHidden || null,
     registerAccelerator: options.menuItem.registerAccelerator || null,
-    commandId: 49,
+    commandId: options.menuItem.commandId || null,
   };
   win.webContents.send("menu:action", {
     tree: tree,
@@ -224,27 +224,6 @@ ipcMain.handle(
     return result;
   }
 );
-
-ipcMain.handle("save:file", async (event, file) => {
-  const result = {
-    error: false,
-    errorMessage: "",
-    data: {
-      success: false,
-    },
-  };
-
-  try {
-    await fs.writeFile(file.path, file.content);
-    result.data.success = true;
-  } catch (e) {
-    result.error = true;
-    result.errorMessage = e.message;
-  }
-
-  console.log("Electron handle > save:file > result:");
-  return result;
-});
 
 ipcMain.handle(
   "saveas:file",

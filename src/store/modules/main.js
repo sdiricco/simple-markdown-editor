@@ -16,9 +16,12 @@ const state = {
     path: "",
     stat: {},
   },
-  isAppLoading: false,
-  isSaving: false,
-  isFileModified: false,
+  machineState: {
+    isLoadingFile: false,
+    isSavingFile: false,
+    isBuildingFile: false,
+    isReadingFile: false
+  },
 };
 
 const getters = {
@@ -26,33 +29,38 @@ const getters = {
   getEditedFile: (state) => state.editedFile,
   getBuiltFile: (state) => state.builtFile,
   getIsFileModified: (state) => state.editedFile.content !== state.initialFile.content,
-  getIsAppLoading: (state) => state.isAppLoading,
-  getIsSaving: (state) => state.isSaving
+  getMachineState: (state) => state.machineState,
 
 };
 
 const actions = {
 
-  async readFile({commit}, data = {path: ""}){
+  async readFile({commit, getters}, data = {path: ""}){
     try {
-      const result = await nodeApi.readFile(data.path);
+      commit("setIsReadingFile", true);
+      const filePath = getters.getInitialFile.path || data.path;
+      const result = await nodeApi.readFile(filePath);
       commit("setInitialFile", result.file);
       commit("setEditedFile", {content: result.file.content});
+      commit("setIsReadingFile", false);
       return result.file;
     } catch (e) {
+      commit("setIsReadingFile", false);
       console.log("error in actions.readFile", e.message);
       throw(e)
     }
   },
 
-  async saveFile({commit, dispatch, getters}, data = {path: ''}){
+  async saveFile({commit, dispatch, getters}, data = {path: null}){
     try {
-      commit("setIsSaving", true);
-      await electronApi.saveFile({path: data.path, content: getters.getEditedFile.content});
-      await dispatch("readFile", {path: data.path})
-      commit("setIsSaving", false)
+      commit("setIsSavingFile", true);
+      const filePath = getters.getInitialFile.path || data.path;
+      const fileContent = getters.getEditedFile.content;
+      await nodeApi.saveFile({path: filePath, content: fileContent});
+      await dispatch("readFile", {path: filePath})
+      commit("setIsSavingFile", false)
     } catch (e) {
-      commit("setIsSaving", false)
+      commit("setIsSavingFile", false)
       console.log("Error in actions.saveFile", e.message);
       throw(e)
     }
@@ -60,9 +68,12 @@ const actions = {
 
   async markdownToHtml({commit}, data = {content: ''}){
     try {
+      commit("setIsBuildingFile", true)
       const result = await electronApi.markdownParse({content: data.content});
       commit("setBuiltFile", result)
+      commit("setIsBuildingFile", false)
     } catch (e) {
+      commit("setIsBuildingFile", false)
       console.log("Error in actions.markdownToHtml", e.message);
       throw(e)
     }
@@ -71,12 +82,12 @@ const actions = {
 
   async loadMarkdownFile({dispatch, commit}, data = {path: ""}){
     try {
-      commit("setIsAppLoading", true)
+      commit("setIsLoadingFile", true)
       const file = await dispatch('readFile', {path: data.path});
       await dispatch('markdownToHtml', {content: file.content})
-      commit("setIsAppLoading", false)
+      commit("setIsLoadingFile", false)
     } catch (e) {
-      commit("setIsAppLoading", false)
+      commit("setIsLoadingFile", false)
       console.log("Error in actions.loadMarkdownFile", e.message);
       throw(e)
     }
@@ -84,19 +95,15 @@ const actions = {
 
 };
 
-
-
-
 const mutations = {
   setInitialFile: (state, data) => (state.initialFile = data),
   setEditedFile: (state, data) => (state.editedFile = data),
   setBuiltFile: (state, data) => (state.builtFile = data),
-  setIsAppLoading: (state, data) => (state.isAppLoading  = data),
-  setIsSaving: (state, data) => (state.isSaving = data)
+  setIsReadingFile: (state, data) => (state.machineState.isReadingFile = data),
+  setIsSavingFile: (state, data) => (state.machineState.isSavingFile = data),
+  setIsBuildingFile: (state, data) => (state.machineState.isBuildingFile = data),
+  setIsLoadingFile: (state, data) => (state.machineState.isLoadingFile = data),
 };
-
-
-
 
 export default {
   namespaced,

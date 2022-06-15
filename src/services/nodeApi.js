@@ -34,3 +34,19 @@ export async function readFile(filePath = "") {
 
   return result;
 }
+
+//save file
+export async function saveFile(data = {path: '', content: ''}){
+  const result = {
+    success: false,
+  };
+  try {
+    await fsProm.writeFile(data.path, data.content);
+    result.success = true;
+  } catch (e) {
+    console.log(e)
+    throw(e)
+  }
+
+  return result;
+}

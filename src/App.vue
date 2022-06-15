@@ -1,90 +1,12 @@
 <template>
   <v-app>
     <v-main>
-      <div
-        class="ma-0 pa-0 main-container"
-        @dragenter="this.dragEnter"
-        @dragleave="this.dragLeave"
-        @drag="this.drag"
-        @dragover="this.dragOver"
-        @drop="this.drop"
-      >
-        <div id="editor" v-if="viewEditor || viewPreview">
-          <textarea
-            v-if="viewEditor"
-            spellcheck="false"
-            :value="getEditedFile.content"
-            @input="onInputTextIDE"
-            :style="{ width: widthTextarea }"
-            class="pb-12"
-          ></textarea>
-          <div
-            v-if="viewPreview"
-            :style="{ width: widthPreview }"
-            id="preview"
-            class="markdown-body"
-            v-html="getBuiltFile.content"
-            :ref="previewRef"
-          ></div>
-        </div>
-        <article class="empty" v-if="!viewPreview && !viewEditor">
-          <pre>
-            <h2>Nothing to see</h2>
-            <p>From the View menu select Editor or Preview</p>
-          </pre>
-        </article>
-      </div>
-      <!-- Hotkeys -->
-      <v-dialog v-model="showHotkeys" max-width="600">
-        <ListHotkeysVue />
-      </v-dialog>
-
-      <v-dialog :value="getIsAppLoading" persistent width="200">
-        <v-card color="primary" dark>
-          <v-card-text class="pa-4">
-            Building..
-            <v-progress-linear
-              class="pa-4"
-              indeterminate
-              color="white"
-            ></v-progress-linear>
-          </v-card-text>
-        </v-card>
-      </v-dialog>
-      <!-- Message dialog -->
-      <v-snackbar
-        :width="messageSnackbar.width"
-        :max-width="messageSnackbar.maxWidth"
-        top
-        outlined
-        color="primary"
-        v-model="messageSnackbar.active"
-        :timeout="messageSnackbar.timeout"
-      >
-        <div class="d-flex align-center justify-center pa-0 ma-0">
-          <h4 class="pa-0 ma-0">{{ messageSnackbar.message }}</h4>
-        </div>
-      </v-snackbar>
-      <!-- Saving dialog -->
-      <v-snackbar
-        :width="snackbar.width"
-        :max-width="snackbar.maxWidth"
-        bottom
-        text
-        outlined
-        color="primary"
-        v-model="snackbar.active"
-        :timeout="snackbar.timeout"
-      >
-        <div class="d-flex align-center justify-space-between">
-          <h3>Saving...</h3>
-          <v-progress-circular
-            size="24"
-            indeterminate
-            color="primary"
-          ></v-progress-circular>
-        </div>
-      </v-snackbar>
+      <v-tabs center-active height="40px">
+        <v-tab @click="currentTab = tabs.editor">Editor</v-tab>
+        <v-tab @click="currentTab = tabs.preview">Preview</v-tab>
+      </v-tabs>
+        <Preview v-if="currentTab === tabs.preview" />
+        <Editor height="calc(100vh - 40px)" v-if="currentTab === tabs.editor" />
     </v-main>
   </v-app>
 </template>
@@ -92,38 +14,30 @@
 <script>
 import { ipcRenderer } from "electron";
 import * as electronApi from "./services/electronApi";
-import ListHotkeysVue from "./components/ListHotkeys.vue";
 import { mapActions, mapGetters, mapMutations } from "vuex";
 import * as validation from "./services/validation";
-import * as electronWrapper from "./utils/electronWrapper"
+import Editor from "./components/Editor.vue";
+import Preview from "./components/Preview.vue";
 export default {
   name: "App",
-  components: { ListHotkeysVue },
+  components: { Editor, Preview },
+
   data() {
+    
     return {
+      tabs: {
+        editor: "editor",
+        preview: "preview",
+      },
+      currentTab: "editor",
       previewRef: "previewRef",
       autoscroll: true,
       buildOnSave: true,
       showHotkeys: false,
-      loadingHtml: false,
       viewEditor: true,
       viewPreview: true,
       widthTextarea: "50%",
       widthPreview: "50%",
-      file: {
-        name: "",
-        content: "",
-        path: "",
-        stat: {},
-      },
-      editFile: {
-        name: "",
-        content: "",
-        html: "",
-        path: "",
-        stat: {},
-        modified: false,
-      },
       snackbar: {
         active: false,
         timeout: 500,
@@ -137,7 +51,6 @@ export default {
         maxWidth: "50px",
         message: "",
       },
-
     };
   },
   computed: {
@@ -147,22 +60,17 @@ export default {
       getBuiltFile: "main/getBuiltFile",
       getPreviewer: "main/getPreviewer",
       getIsFileModified: "main/getIsFileModified",
-      getIsAppLoading: "main/getIsAppLoading",
+      getMachineState: "main/getMachineState",
     }),
-    getInitialFilePath() {
+    getAppIsLoading() {
+      return Object.values(this.getMachineState).some((v) => v === true);
+    },
+    getFilePath() {
       return this.getInitialFile.path;
     },
-    filePath() {
-      return this.editFile.path;
-    },
-    fileContent() {
-      return this.editFile.content;
-    },
-    fileChanged() {
-      return this.editFile.modified;
-    },
-    fileHtml() {
-      return this.editFile.html;
+    getIsNewFile() {
+      const r = Boolean(this.getFilePath);
+      return !r;
     },
   },
   watch: {
@@ -174,11 +82,10 @@ export default {
         }
       });
     },
-
     getIsFileModified: async function (value) {
       await electronApi.fileChanged(value);
     },
-    getInitialFilePath: async function (value) {
+    getFilePath: async function (value) {
       await electronApi.setMarkdownPath(value);
     },
     viewPreview: function (value) {
@@ -202,11 +109,11 @@ export default {
     ...mapMutations({
       setEditedFile: "main/setEditedFile",
     }),
+    onChangeView(view) {
+      this.currentTab = view;
+    },
     onInputTextIDE(event) {
-      console.log("@input");
-      console.log(event.target.value);
-      const content = event.target.value;
-      this.setEditedFile({ content: content });
+      this.setEditedFile({ content: event.target.value });
     },
     //MENU ACTIONS HANDLER
     //On Click: Menu > File > Open
@@ -230,9 +137,7 @@ export default {
         if (response.canceled) {
           return;
         }
-
         await validation.validateFile(response.path);
-
         await this.loadMarkdownFile({ path: response.path });
       } catch (e) {
         await electronApi.showError(
@@ -243,7 +148,18 @@ export default {
       }
     },
     //On click: Menu > Save
-    async menuOnSave() {},
+    async menuOnSave() {
+      //se non è modificato, non viene salvato
+      if (!this.getIsFileModified) {
+        return;
+      }
+      //se il file è nuovo ovvero non è stato aperto un file precedentemente
+      if (this.getIsNewFile) {
+        await this.menuOnSaveAs();
+        return;
+      }
+      await this.saveFile();
+    },
     //On click: Menu > Save as
     async menuOnSaveAs() {
       const response = await electronApi.saveDialog({
@@ -252,6 +168,7 @@ export default {
       if (response.canceled) {
         return;
       }
+      console.log("response", response);
       await this.saveFile({ path: response.path });
     },
     //On click: Menu > View > editor
@@ -358,15 +275,12 @@ export default {
     },
     async drop(evt) {
       console.log("Drop event", evt);
-
       try {
         evt.preventDefault();
         evt.stopPropagation();
-
         const files = evt.dataTransfer.files;
         const filePaths = Object.values(files).map((f) => f.path);
         console.log("files", filePaths);
-
         await validation.validateFiles(filePaths);
         await this.loadMarkdownFile({ path: filePaths[0] });
       } catch (e) {
@@ -383,13 +297,11 @@ export default {
       try {
         //get the app args
         const response = await electronApi.getAppArgs();
-
         //If there are not args, simply returns
         if (!response.args) {
           console.log("App launched without any files");
           return;
         }
-
         //if there are args, validate them
         await validation.validateArgs(response.args, { multipleArgs: false });
         //the args rapresents the path of markdown files
@@ -402,14 +314,11 @@ export default {
       }
     },
   },
-
   async created() {
     ipcRenderer.on("menu:action", this.onClickMenuItem);
     try {
       await electronApi.domLoaded();
       await this.init();
-      const result = await electronWrapper.showMessageQuestion('my message');
-      console.log("result", result);
     } catch (e) {
       await electronApi.showError(
         `Error during the initialization phase of the app: ${e.message}\n\n${
@@ -422,61 +331,4 @@ export default {
 </script>
 
 <style>
-html,
-body,
-#editor {
-  margin: 0;
-  height: 100%;
-}
-
-html {
-  overflow-y: hidden !important;
-}
-
-textarea {
-  display: inline-block;
-  width: 50%;
-  height: 100vh;
-  vertical-align: top;
-  box-sizing: border-box;
-  padding: 20px;
-  overflow-y: auto;
-}
-#editor div {
-  display: inline-block;
-  width: 50%;
-  height: 100vh;
-  vertical-align: top;
-  box-sizing: border-box;
-  padding: 20px;
-  overflow-y: auto;
-}
-
-#editor textarea {
-  border: none;
-  border-right: 1px solid #ccc;
-  resize: none;
-  outline: none;
-  background-color: #f6f6f6;
-  font-size: 14px;
-  font-family: "Monaco", courier, monospace;
-  padding: 20px;
-  height: 100vh;
-}
-
-code {
-  color: #f66;
-}
-
-.empty {
-  height: 100%;
-  display: grid;
-  text-align: center;
-  justify-content: center;
-  align-items: center;
-}
-
-.main-container {
-  height: 100%;
-}
 </style>
