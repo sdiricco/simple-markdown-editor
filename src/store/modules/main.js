@@ -7,6 +7,7 @@ const state = {
     content: "",
   },
   editedFile:{
+    new: "",
     content: ""
   },
   initialFile: {
@@ -41,7 +42,7 @@ const actions = {
       const filePath = getters.getInitialFile.path || data.path;
       const result = await nodeApi.readFile(filePath);
       commit("setInitialFile", result.file);
-      commit("setEditedFile", {content: result.file.content});
+      commit("setEditedFile", {content: result.file.content, new: true});
       commit("setIsReadingFile", false);
       return result.file;
     } catch (e) {
@@ -102,7 +103,7 @@ const actions = {
   },
 
   async setEditedFile({commit}, data = {content: ''}){
-    commit("setEditedFile", {content:data.content});
+    commit("setEditedFile", {content:data.content, new: false});
   }
 };
 

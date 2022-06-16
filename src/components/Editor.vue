@@ -38,7 +38,10 @@ import {mapActions, mapGetters} from "vuex";
     computed: {
       ...mapGetters({
         getEditedFile: 'main/getEditedFile'
-      })
+      }),
+      getIsNewFile(){
+        return this.getEditedFile.new
+      }
     },
     methods: {
       ...mapActions({
@@ -52,6 +55,15 @@ import {mapActions, mapGetters} from "vuex";
         this.setEditedFile({content: this.cm.getValue()})
       }
     },
+    watch:{
+      getIsNewFile:{
+        handler: function(isNew){
+          if (isNew) {
+            this.cm.setValue(this.getEditedFile.content)
+          }
+        }
+      }
+    },
     mounted() {
       console.log("this.code", this.code);
       this.cm = CodeMirror.fromTextArea(document.getElementById('editor'), {
@@ -59,6 +71,7 @@ import {mapActions, mapGetters} from "vuex";
         theme: 'dracula',
         mode: 'markdown',
         keyMap: 'sublime',
+        lineWrapping: true
       })
       this.cm.setSize('100%', this.height);
       this.cm.setValue(this.getEditedFile.content)
@@ -72,6 +85,8 @@ import {mapActions, mapGetters} from "vuex";
 </script>
 
 <style scoped>
+
+
 .m-container{
   height: 100%;
   display: flex;
@@ -81,5 +96,6 @@ import {mapActions, mapGetters} from "vuex";
 </style>
 
 <style>
+
 
 </style>

@@ -1,0 +1,86 @@
+/*!
+ * GitHub Dark v0.4.1
+ * Copyright (c) 2012 - 2017 GitHub, Inc.
+ * Licensed under MIT (https://github.com/primer/github-syntax-theme-generator/blob/master/LICENSE)
+ */
+.CodeMirror {
+  background: rgb(40.42,54);
+  color: #c9d1d9; }
+
+ .CodeMirror-gutters {
+  background: rgb(40.42,54);
+  border-right-width: 0; }
+
+ .CodeMirror-guttermarker {
+  color: c9d1d9; }
+
+ .CodeMirror-guttermarker-subtle {
+  color: #d0d0d0; }
+
+ .CodeMirror-linenumber {
+  color: #6e7880;
+  padding: 0 16px 0 16px; }
+
+ .CodeMirror-cursor {
+  border-left: 1px solid #c9d1d9; }
+
+ div.CodeMirror-selected,
+ .CodeMirror-line::selection,
+ .CodeMirror-line > span::selection,
+ .CodeMirror-line > span > span::selection,
+ .CodeMirror-line::-moz-selection,
+ .CodeMirror-line > span::-moz-selection,
+ .CodeMirror-line > span > span::-moz-selection {
+  background: #832563; }
+
+ .CodeMirror-activeline-background {
+  background: #464a4d; }
+
+ .CodeMirror-matchingbracket {
+  text-decoration: underline;
+  color: #c9d1d9 !important; }
+
+ .CodeMirror-lines {
+  font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
+  font-size: 14px;
+  background: #20272b;
+  line-height: 20px; }
+
+ .cm-comment {
+  color: #969896; }
+
+ .cm-constant {
+  color: #58a6ff; }
+
+ .cm-entity {
+  font-weight: normal;
+  font-style: normal;
+  text-decoration: none;
+  color: #9774cb; }
+
+ .cm-keyword {
+  font-weight: normal;
+  font-style: normal;
+  text-decoration: none;
+  color: #cc2372; }
+
+ .cm-storage {
+  color: #cc2372; }
+
+ .cm-string {
+  font-weight: normal;
+  font-style: normal;
+  text-decoration: none;
+  color: #3c66e2; }
+
+ .cm-support {
+  font-weight: normal;
+  font-style: normal;
+  text-decoration: none;
+  color: #0099cd; }
+
+ .cm-variable {
+  font-weight: normal;
+  font-style: normal;
+  text-decoration: none;
+  color: #fb8764; }

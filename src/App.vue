@@ -1,12 +1,14 @@
 <template>
   <v-app>
     <v-main>
-        <v-tabs center-active height="32px">
-          <v-tab @click="currentTab = tabs.editor">Editor</v-tab>
-          <v-tab @click="currentTab = tabs.preview">Preview</v-tab>
-        </v-tabs>
-        <Editor height="calc(100vh - 32px)" v-if="currentTab === tabs.editor" />
+      <v-tabs hide-slider center-active height="40px" dark>
+        <v-tab active-class="my-custom-active-class" class="my-custom-class" @click="currentTab = tabs.editor">Editor</v-tab>
+        <v-tab active-class="my-custom-active-class" class="my-custom-class" @click="currentTab = tabs.preview">Preview</v-tab>
+      </v-tabs>
+      <div class="m-container">
+        <Editor v-if="currentTab === tabs.editor" />
         <Preview v-else-if="currentTab === tabs.preview" />
+      </div>
     </v-main>
   </v-app>
 </template>
@@ -18,13 +20,12 @@ import { mapActions, mapGetters, mapMutations } from "vuex";
 import * as validation from "./services/validation";
 import Editor from "./components/Editor.vue";
 import Preview from "./components/Preview.vue";
-import * as electronWrapper from "./utils/electronWrapper"
+import * as electronWrapper from "./utils/electronWrapper";
 export default {
   name: "App",
   components: { Editor, Preview },
 
   data() {
-    
     return {
       tabs: {
         editor: "editor",
@@ -302,5 +303,18 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
+.m-container{
+  height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+
+.my-custom-active-class{
+  background-color: rgb(40,42,54);
+  border-radius: 4px 4px 0px 0px;
+}
+
+.my-custom-class{
+  margin-top:8px;
+}
 </style>
