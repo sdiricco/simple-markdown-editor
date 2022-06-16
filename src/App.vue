@@ -1,12 +1,12 @@
 <template>
   <v-app>
     <v-main>
-      <v-tabs center-active height="40px">
-        <v-tab @click="currentTab = tabs.editor">Editor</v-tab>
-        <v-tab @click="currentTab = tabs.preview">Preview</v-tab>
-      </v-tabs>
-        <Preview v-if="currentTab === tabs.preview" />
-        <Editor height="calc(100vh - 40px)" v-if="currentTab === tabs.editor" />
+        <v-tabs center-active height="32px">
+          <v-tab @click="currentTab = tabs.editor">Editor</v-tab>
+          <v-tab @click="currentTab = tabs.preview">Preview</v-tab>
+        </v-tabs>
+        <Editor height="calc(100vh - 32px)" v-if="currentTab === tabs.editor" />
+        <Preview v-else-if="currentTab === tabs.preview" />
     </v-main>
   </v-app>
 </template>
@@ -18,6 +18,7 @@ import { mapActions, mapGetters, mapMutations } from "vuex";
 import * as validation from "./services/validation";
 import Editor from "./components/Editor.vue";
 import Preview from "./components/Preview.vue";
+import * as electronWrapper from "./utils/electronWrapper"
 export default {
   name: "App",
   components: { Editor, Preview },
@@ -30,27 +31,6 @@ export default {
         preview: "preview",
       },
       currentTab: "editor",
-      previewRef: "previewRef",
-      autoscroll: true,
-      buildOnSave: true,
-      showHotkeys: false,
-      viewEditor: true,
-      viewPreview: true,
-      widthTextarea: "50%",
-      widthPreview: "50%",
-      snackbar: {
-        active: false,
-        timeout: 500,
-        width: "50px",
-        maxWidth: "50px",
-      },
-      messageSnackbar: {
-        active: false,
-        timeout: 1500,
-        width: "50px",
-        maxWidth: "50px",
-        message: "",
-      },
     };
   },
   computed: {
@@ -74,14 +54,6 @@ export default {
     },
   },
   watch: {
-    fileHtml: function () {
-      this.$nextTick(() => {
-        if (this.autoscroll) {
-          this.$refs[this.previewRef].scrollTop =
-            this.$refs[this.previewRef].scrollHeight;
-        }
-      });
-    },
     getIsFileModified: async function (value) {
       await electronApi.fileChanged(value);
     },
@@ -123,7 +95,7 @@ export default {
         //1 - if user click on cancel, siply return
         //2 - if user click on ok, continue choosing file from open dialog
         if (this.getIsFileModified) {
-          const response = await electronApi.showMessage(
+          const response = await electronWrapper.showMessageQuestion(
             "The file has changed. Are you sure you want to open a new file without saving?"
           );
           if (response.canceled) {

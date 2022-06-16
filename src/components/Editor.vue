@@ -19,6 +19,7 @@ import 'codemirror/addon/dialog/dialog.css'
 import 'codemirror/addon/display/fullscreen'
 import 'codemirror/addon/display/fullscreen'
 import 'codemirror/addon/display/fullscreen.css'
+import {mapActions, mapGetters} from "vuex";
 
   export default {
     name: "Editor",
@@ -30,28 +31,42 @@ import 'codemirror/addon/display/fullscreen.css'
     },
     data(){
       return{
-        code: "ciao",
+        code: "",
         cm: undefined
       }
     },
+    computed: {
+      ...mapGetters({
+        getEditedFile: 'main/getEditedFile'
+      })
+    },
     methods: {
+      ...mapActions({
+        setEditedFile: 'main/setEditedFile'
+      }),
       destroy(){
         this.cm.setOption("mode", "text/x-csrc");
         this.cm.getWrapperElement().parentNode.removeChild(this.  cm.getWrapperElement());
+      },
+      onChange(){
+        this.setEditedFile({content: this.cm.getValue()})
       }
     },
     mounted() {
+      console.log("this.code", this.code);
       this.cm = CodeMirror.fromTextArea(document.getElementById('editor'), {
         lineNumbers: true,
         theme: 'dracula',
         mode: 'markdown',
         keyMap: 'sublime',
       })
-      this.cm.setSize('100%', this.height)
+      this.cm.setSize('100%', this.height);
+      this.cm.setValue(this.getEditedFile.content)
+      this.cm.on("change", this.onChange)
     },
     beforeUnmount() {
       this.destroy();
-      
+      this.cm.off("change", this.onChange)
     },
   }
 </script>

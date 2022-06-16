@@ -66,6 +66,14 @@ const actions = {
     }
   },
 
+  async buildFile({dispatch, getters}){
+    try {
+      await dispatch("markdownToHtml", {content: getters.getEditedFile.content})
+    } catch (e) {
+      console.log("Error in actions.buildFile", e.message);
+    }
+  },
+
   async markdownToHtml({commit}, data = {content: ''}){
     try {
       commit("setIsBuildingFile", true)
@@ -93,6 +101,9 @@ const actions = {
     }
   },
 
+  async setEditedFile({commit}, data = {content: ''}){
+    commit("setEditedFile", {content:data.content});
+  }
 };
 
 const mutations = {
