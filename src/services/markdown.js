@@ -40,6 +40,7 @@ marked.use({ renderer });
  * @returns {String} html content
  */
 export function markdownToHtml(content = "") {
+  console.log("Parsing markdown");
   return marked.parse(content);
 }
 
@@ -49,5 +50,6 @@ export function markdownToHtml(content = "") {
  * @returns {void}
  */
 export function setFilePath(p = "") {
+  console.log("path set to", p);
   basePath = path.dirname(p);
 }

@@ -52,17 +52,6 @@ function createTemplate(app, window, onClickItem) {
         },
         { type: "separator" },
         {
-          label: "Build",
-          accelerator: "Ctrl + B",
-          click: (menuItem, browserWindow, event) =>
-            onClickItem(["File", "Build"], {
-              menuItem: menuItem,
-              browserWindow: browserWindow,
-              event: event,
-            }),
-        },
-        { type: "separator" },
-        {
           label: "Save",
           accelerator: "Ctrl + S",
           click: (menuItem, browserWindow, event) =>
@@ -77,6 +66,16 @@ function createTemplate(app, window, onClickItem) {
           accelerator: "Ctrl + Shift + S",
           click: (menuItem, browserWindow, event) =>
             onClickItem(["File", "Save as.."], {
+              menuItem: menuItem,
+              browserWindow: browserWindow,
+              event: event,
+            }),
+        },
+        { type: "separator" },
+        {
+          label: "Preferences",
+          click: (menuItem, browserWindow, event) =>
+            onClickItem(["File", "Preferences"], {
               menuItem: menuItem,
               browserWindow: browserWindow,
               event: event,
@@ -115,24 +114,10 @@ function createTemplate(app, window, onClickItem) {
       label: "View",
       submenu: [
         {
-          label: "Editor",
-          type: "checkbox",
-          accelerator: "Ctrl + Shift + E",
-          checked: true,
+          label: "Toogle window",
+          accelerator: "Ctrl + Tab",
           click: (menuItem, browserWindow, event) =>
-            onClickItem(["View", "Editor"], {
-              menuItem: menuItem,
-              browserWindow: browserWindow,
-              event: event,
-            }),
-        },
-        {
-          label: "Preview",
-          accelerator: "Ctrl + Shift + P",
-          type: "checkbox",
-          checked: true,
-          click: (menuItem, browserWindow, event) =>
-            onClickItem(["View", "Preview"], {
+            onClickItem(["View", "Toogle window"], {
               menuItem: menuItem,
               browserWindow: browserWindow,
               event: event,
@@ -162,33 +147,6 @@ function createTemplate(app, window, onClickItem) {
             ]
           : [{ type: "separator" }, { role: "close" }]),
       ],
-    },
-    {
-      label: "Settings",
-      submenu: [
-        {
-          label: "Build on save",
-          type: "checkbox",
-          checked: true,
-          click: (menuItem, browserWindow, event) =>
-            onClickItem(["Settings", "Build on save"], {
-              menuItem: menuItem,
-              browserWindow: browserWindow,
-              event: event,
-            }),
-        },
-        {
-          label: "Autoscroll",
-          type: "checkbox",
-          checked: true,
-          click: (menuItem, browserWindow, event) =>
-            onClickItem(["Settings", "Autoscroll"], {
-              menuItem: menuItem,
-              browserWindow: browserWindow,
-              event: event,
-            }),
-        },
-      ]
     },
     {
       role: "help",

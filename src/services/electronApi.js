@@ -12,24 +12,10 @@ export async function showMessage(data = {options: {}}) {
   }
   return response.data;
 }
-export async function showError(message) {
-  const response = await ipcRenderer.invoke("error:box", message);
-  if (response.error) {
-    throw new ElectronError(response.errorMessage)
-  }
-  return response.data;
-}
-//save file to file system
-export async function saveFile(file = { path: "", content: "" }) {
-  const response = await ipcRenderer.invoke("save:file", file);
-  if (response.error) {
-    throw new ElectronError(response.errorMessage)
-  }
-  return response.data;
-}
+
 //save as file to file system
 export async function saveDialog(data = { options: {} }) {
-  const response = await ipcRenderer.invoke("saveas:file", data);
+  const response = await ipcRenderer.invoke("electron/show-save-dialog", data);
   if (response.error) {
     throw new ElectronError(response.errorMessage)
   }
@@ -84,13 +70,6 @@ export async function openDialogFile(data = {options: {}}) {
   return response.data;
 }
 
-export async function readFile(data = {path: ''}) {
-  const response = await ipcRenderer.invoke("file:read", data);
-  if (response.error) {
-    throw new ElectronError(response.errorMessage)
-  }
-  return response.data;
-}
 
 export async function getAppArgs(){
   const response = await ipcRenderer.invoke("app:getargs");

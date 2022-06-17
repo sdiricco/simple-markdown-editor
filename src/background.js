@@ -136,7 +136,6 @@ ipcMain.handle("dom:loaded", async () => {
 });
 
 function onClickMenuItem(tree, options) {
-  console.log("value", options);
   const optionsFiletered = {
     label: options.menuItem.label || null,
     type: options.menuItem.type || null,
@@ -158,6 +157,11 @@ function onClickMenuItem(tree, options) {
   });
 }
 
+/*************************************************************************************/
+/* DIALOGs */
+/*************************************************************************************/
+
+/* SHOW MESSAGE BOX */
 ipcMain.handle("electron/show-message-box", async (event, data = {options: {}}) => {
   const result = {
     error: false,
@@ -177,76 +181,23 @@ ipcMain.handle("electron/show-message-box", async (event, data = {options: {}}) 
   return result;
 });
 
+/* SHOW SAVE DIALOG */
 ipcMain.handle(
-  "open:file",
-  async (
-    event,
-    options = { filters: [{ name: "All Files", extensions: ["*"] }] }
-  ) => {
+  "electron/show-save-dialog",
+  async (_event, data = { options: {} }) => {
     const result = {
       error: false,
       errorMessage: "",
       data: {
-        canceled: false,
-        file: {
-          name: "",
-          path: "",
-          content: "",
-          stat: {},
-        },
+        canceled: null,
+        path: null,
+        bookmark: null
       },
     };
-
-    const dialogOptions = { ...options, properties: ["openFile"] };
-
-    //get the path of the selected markdown file
-    let response = await dialog.showOpenDialog(win, dialogOptions);
-
-    //if the path does not exist, return
-    if (response.canceled) {
-      result.data.canceled = true;
-      return result;
-    }
-
-    const filePath = response.filePaths[0];
-
-    const stat = await fs.stat(filePath);
-    const name = path.basename(filePath);
-    const buffer = await fs.readFile(filePath);
-    const content = buffer.toString("utf8");
-
-    result.data.file.name = name;
-    result.data.file.path = filePath;
-    result.data.file.content = content;
-    result.data.file.stat = stat;
-
-    console.log("Electron handle > open:file > result:");
-    return result;
-  }
-);
-
-ipcMain.handle(
-  "saveas:file",
-  async (event, data = { options: {} }) => {
-    const result = {
-      error: false,
-      errorMessage: "",
-      data: {
-        canceled: false,
-        path: '',
-      },
-    };
-
-    const dialogOptions = {...data.options};
 
     try {
-      let dialogResponse = await dialog.showSaveDialog(win, dialogOptions);
-      if (dialogResponse.canceled) {
-        result.data.canceled = true;
-        return result;
-      }
-      result.data.path = dialogResponse.filePath;
-
+      const dialogOptions = {...data.options};
+      result.data = await dialog.showSaveDialog(win, dialogOptions);
     } catch (e) {
       result.error = true;
       result.errorMessage = e.message;
@@ -256,10 +207,27 @@ ipcMain.handle(
   }
 );
 
+
+
 ipcMain.handle("app:settitle", async (event, message) => {
-  appMessage = message;
-  const title = `${appTitle} ${appMessage ? "- " + appMessage : ""}`;
-  win.setTitle(title);
+  const result = {
+    error: false,
+    errorMessage: "",
+    data: {
+      success: true,
+    },
+  };
+  try {
+    appMessage = message;
+    const title = `${appTitle} ${appMessage ? "- " + appMessage : ""}`;
+    win.setTitle(title);
+  } catch (e) {
+    e.error = true;
+    e.message = e.message
+  }
+
+  return result
+
 });
 
 ipcMain.handle("file:changed", (event, value) => {
@@ -298,30 +266,7 @@ ipcMain.handle("markdown:setpath", (event, p) => {
   return result;
 });
 
-ipcMain.handle("error:box", async (event, data) => {
-  const result = {
-    error: false,
-    errorMessage: "",
-    data: {
-      canceled: false,
-    },
-  };
-  try {
-    const user = await dialog.showMessageBox(win, {
-      message: data,
-      title: "Save file",
-      type: "question",
-      buttons: ["Ok", "cancel"],
-    });
-    result.data.canceled = user.response > 0;
-  } catch (e) {
-    result.error = true;
-    result.errorMessage = e.message;
-  }
 
-  console.log("error:box > result", result);
-  return result;
-});
 
 ipcMain.handle(
   "dialog:openfile",

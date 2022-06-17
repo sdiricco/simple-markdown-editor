@@ -1,14 +1,25 @@
 <template>
   <v-app>
     <v-main>
-      <v-tabs hide-slider center-active height="40px" dark>
-        <v-tab active-class="my-custom-active-class" class="my-custom-class" @click="currentTab = tabs.editor">Editor</v-tab>
-        <v-tab active-class="my-custom-active-class" class="my-custom-class" @click="currentTab = tabs.preview">Preview</v-tab>
+      <v-tabs background-color="2c2c2c" v-model="tab" hide-slider center-active height="32px" dark>
+        <v-tab
+          active-class="my-custom-active-class"
+          class="my-custom-class"
+          href="#tab-editor"
+          >Editor</v-tab
+        >
+        <v-tab
+          href="#tab-preview"
+          active-class="my-custom-active-class"
+          class="my-custom-class"
+          >Preview</v-tab
+        >
       </v-tabs>
       <div class="m-container">
-        <Editor v-if="currentTab === tabs.editor" />
-        <Preview v-else-if="currentTab === tabs.preview" />
+        <Editor v-if="tab === tabs.editor" />
+        <Preview v-if="tab === tabs.preview" />
       </div>
+      <Settings />
     </v-main>
   </v-app>
 </template>
@@ -21,17 +32,18 @@ import * as validation from "./services/validation";
 import Editor from "./components/Editor.vue";
 import Preview from "./components/Preview.vue";
 import * as electronWrapper from "./utils/electronWrapper";
+import Settings from "./components/Settings.vue";
 export default {
   name: "App",
-  components: { Editor, Preview },
+  components: { Editor, Preview, Settings },
 
   data() {
     return {
       tabs: {
-        editor: "editor",
-        preview: "preview",
+        editor: "tab-editor",
+        preview: "tab-preview",
       },
-      currentTab: "editor",
+      tab: "tab-editor",
     };
   },
   computed: {
@@ -42,16 +54,11 @@ export default {
       getPreviewer: "main/getPreviewer",
       getIsFileModified: "main/getIsFileModified",
       getMachineState: "main/getMachineState",
+      getHasToBuilt: "main/getHasToBuilt",
+      getOpenNewFile: "main/getOpenNewFile",
     }),
-    getAppIsLoading() {
-      return Object.values(this.getMachineState).some((v) => v === true);
-    },
     getFilePath() {
       return this.getInitialFile.path;
-    },
-    getIsNewFile() {
-      const r = Boolean(this.getFilePath);
-      return !r;
     },
   },
   watch: {
@@ -59,19 +66,14 @@ export default {
       await electronApi.fileChanged(value);
     },
     getFilePath: async function (value) {
-      await electronApi.setMarkdownPath(value);
-    },
-    viewPreview: function (value) {
-      this.widthTextarea = value ? "50%" : "100%";
-      this.messageSnackbar.active = true;
-      this.messageSnackbar.message = value
-        ? "Enable preview"
-        : "Disable preview";
-    },
-    viewEditor: function (value) {
-      this.widthPreview = value ? "50%" : "100%";
-      this.messageSnackbar.active = true;
-      this.messageSnackbar.message = value ? "Enable editor" : "Disable editor";
+      console.log(value);
+      try {
+        await electronApi.setTitle(value);
+      } catch (e) {
+        console.log(e.name);
+        console.log(e.message);
+        console.log(e.details);
+      }
     },
   },
   methods: {
@@ -84,6 +86,12 @@ export default {
     }),
     onChangeView(view) {
       this.currentTab = view;
+    },
+    toggleView() {
+      const tabs = Object.values(this.tabs);
+      let idx = tabs.indexOf(this.tab);
+      idx = (idx >= tabs.length - 1) ? 0 : idx + 1;
+      this.tab = tabs[idx]
     },
     onInputTextIDE(event) {
       this.setEditedFile({ content: event.target.value });
@@ -113,7 +121,7 @@ export default {
         await validation.validateFile(response.path);
         await this.loadMarkdownFile({ path: response.path });
       } catch (e) {
-        await electronApi.showError(
+        await electronWrapper.showErrorBox(
           `Error during opening file: ${e.message}\n\n${
             e.details ? "Details: " + e.details : ""
           }`
@@ -126,40 +134,25 @@ export default {
       if (!this.getIsFileModified) {
         return;
       }
-      //se il file è nuovo ovvero non è stato aperto un file precedentemente
-      if (this.getIsNewFile) {
+      if (this.getInitialFile.path === "") {
         await this.menuOnSaveAs();
         return;
       }
-      await this.saveFile();
+      await this.saveFile({
+        path: this.getFilePath,
+        content: this.getEditedFile.content,
+      });
     },
     //On click: Menu > Save as
     async menuOnSaveAs() {
-      const response = await electronApi.saveDialog({
-        options: this.saveDialogOptions,
-      });
-      if (response.canceled) {
+      const {canceled, filePath} = await electronWrapper.showSaveDialog();
+      if (canceled) {
         return;
       }
-      console.log("response", response);
-      await this.saveFile({ path: response.path });
-    },
-    //On click: Menu > View > editor
-    menuOnViewEditor(options) {
-      console.log("Click on Menu > View Editor");
-      console.log("View editor", options.checked);
-    },
-    //On click: Menu > view preview
-    menuOnViewPreview(options) {
-      console.log("View preview", options.checked);
-    },
-    async menuOnBuild() {},
-    menuOnHotkeys() {},
-    menuOnBuildOnSave(options) {
-      console.log("View editor", options.checked);
-    },
-    menuOnAutoscroll(options) {
-      console.log("Autoscroll", options.checked);
+      await this.saveFile({
+        path: filePath,
+        content: this.getEditedFile.content,
+      });
     },
     async onClickMenuItem(_event, data = { tree: [], options: {} }) {
       const tree = data.tree;
@@ -171,10 +164,6 @@ export default {
               console.log("Click on Menu > File > Open");
               await this.menuOnOpen(options);
               break;
-            case "Build":
-              console.log("Click on Menu > File > Build");
-              await this.menuOnBuild(options);
-              break;
             case "Save":
               console.log("Click on Menu > File > Save");
               await this.menuOnSave(options);
@@ -183,33 +172,18 @@ export default {
               console.log("Click on Menu > File > Save as..");
               await this.menuOnSaveAs(options);
               break;
+            case "Preferences":
+              console.log("Click on Menu > File > Preferences");
+              break;
             default:
               break;
           }
           break;
         case "View":
           switch (tree[1]) {
-            case "Editor":
-              console.log("Click on Menu > View > Editor");
-              this.menuOnViewEditor(options);
-              break;
-            case "Preview":
-              console.log("Click on Menu > View > Preview");
-              this.menuOnViewPreview(options);
-              break;
-            default:
-              break;
-          }
-          break;
-        case "Settings":
-          switch (tree[1]) {
-            case "Build on save":
-              console.log("Click on Menu > Settings > Build on save");
-              this.menuOnBuildOnSave(options);
-              break;
-            case "Autoscroll":
-              console.log("Click on Menu > Settings > Autoscroll");
-              this.menuOnAutoscroll(options);
+            case "Toogle window":
+              console.log("Click on Menu > View > Toogle window");
+              this.toggleView();
               break;
             default:
               break;
@@ -259,7 +233,7 @@ export default {
       } catch (e) {
         console.log(e.message);
         console.log(e.details);
-        await electronApi.showError(
+        await electronWrapper.showErrorBox(
           `Error during the drop files: ${e.message}\n\n${
             e.details ? "Details: " + e.details : ""
           }`
@@ -293,7 +267,7 @@ export default {
       await electronApi.domLoaded();
       await this.init();
     } catch (e) {
-      await electronApi.showError(
+      await electronWrapper.showErrorBox(
         `Error during the initialization phase of the app: ${e.message}\n\n${
           e.details ? "Details: " + e.details : ""
         }`
@@ -304,17 +278,25 @@ export default {
 </script>
 
 <style scoped>
-.m-container{
-  height: calc(100vh - 40px);
+.m-container {
+  height: calc(100vh - 32px);
   overflow-y: auto;
+  background-color: rgb(40, 42, 54);
 }
 
-.my-custom-active-class{
-  background-color: rgb(40,42,54);
+.my-custom-active-class {
+  background-color: rgb(40, 42, 54);
   border-radius: 4px 4px 0px 0px;
+
 }
 
 .my-custom-class{
-  margin-top:8px;
+  border-radius: 4px 4px 0px 0px;
+
+
+}
+.my-custom-class:before {
+  background-color: transparent;
+  transition: none;
 }
 </style>

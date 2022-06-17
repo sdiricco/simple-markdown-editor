@@ -27,6 +27,8 @@ export async function readFile(filePath = "") {
     result.file.content = buffer.toString("utf8");
     result.file.stat = await fsProm.stat(filePath);
     result.file.name = path.basename(filePath);
+    result.file.path = filePath;
+    result.file.ext = path.extname(filePath)
   } catch (e) {
     console.log(e);
     throw(e)
