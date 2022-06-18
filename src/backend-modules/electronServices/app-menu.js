@@ -71,16 +71,16 @@ function createTemplate(app, window, onClickItem) {
               event: event,
             }),
         },
-        { type: "separator" },
-        {
-          label: "Preferences",
-          click: (menuItem, browserWindow, event) =>
-            onClickItem(["File", "Preferences"], {
-              menuItem: menuItem,
-              browserWindow: browserWindow,
-              event: event,
-            }),
-        },
+        // { type: "separator" },
+        // {
+        //   label: "Preferences",
+        //   click: (menuItem, browserWindow, event) =>
+        //     onClickItem(["File", "Preferences"], {
+        //       menuItem: menuItem,
+        //       browserWindow: browserWindow,
+        //       event: event,
+        //     }),
+        // },
         { type: "separator" },
         isMac ? { role: "close" } : { role: "quit" },
       ],
@@ -151,16 +151,16 @@ function createTemplate(app, window, onClickItem) {
     {
       role: "help",
       submenu: [
-        {
-          label: "Hotkeys",
-          accelerator: "Ctrl + Shift + H",
-          click: (menuItem, browserWindow, event) =>
-            onClickItem(["Help", "Hotkeys"], {
-              menuItem: menuItem,
-              browserWindow: browserWindow,
-              event: event,
-            }),
-        },
+        // {
+        //   label: "Hotkeys",
+        //   accelerator: "Ctrl + Shift + H",
+        //   click: (menuItem, browserWindow, event) =>
+        //     onClickItem(["Help", "Hotkeys"], {
+        //       menuItem: menuItem,
+        //       browserWindow: browserWindow,
+        //       event: event,
+        //     }),
+        // },
         {
           label: "Learn More",
           click: (menuItem, browserWindow, event) =>
