@@ -1,19 +1,47 @@
-export const electron = {
-  dialog: {
-    options: {
-      openDialog: {
-        filters: [{ name: "Markdown", extensions: ["md", "markdown"] }],
+export const dialog = {
+      showOpenDialog: {
+        options: {
+          filters: [{ name: "Markdown", extensions: ["md", "markdown"] }],
+          properties: ["openFile"] 
+        },
+        response: {
+          canceled:null,
+          filePath: '',
+          bookmark: ''
+        }
       },
-      saveDialog: {
-        defaultPath: "Document.md",
-        filters: [{ name: "Markdown", extensions: ["md", "markdown"] }],
+      showSaveDialog: {
+        options: {
+          defaultPath: "Document.md",
+          filters: [{ name: "Markdown", extensions: ["md", "markdown"] }],
+        },
+        response: {
+          canceled:null,
+          filePath: '',
+          bookmark: ''
+        }
       },
       showMessageBox: {
-        title: "",
-        type: "question",
-        message: "",
-        buttons: ["ok", "cancel"],
+        options:{
+          title: "Info",
+          type: "question",
+          message: "",
+          buttons: ["ok", "cancel"],
+        },
+        response:{
+          response: {
+            ok: false,
+            cancel: false
+          },
+          checkboxChecked: false
+        }
       },
-    },
-  },
+      showErrorBox: {
+        options: {
+          title: "Error",
+          type: "error",
+          message: "",
+        },
+        response: null
+      },
 };

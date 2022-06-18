@@ -1,7 +1,7 @@
 <template>
   <v-app>
     <v-main>
-      <v-tabs background-color="2c2c2c" v-model="tab" hide-slider center-active height="32px" dark>
+      <v-tabs background-color="#2c2c2c" class="tabs-custom-style" v-model="tab" hide-slider center-active height="32px" dark>
         <v-tab
           active-class="my-custom-active-class"
           class="my-custom-class"
@@ -19,7 +19,7 @@
         <Editor v-if="tab === tabs.editor" />
         <Preview v-if="tab === tabs.preview" />
       </div>
-      <Settings />
+      <Settings v-model="dialogSettings" />
     </v-main>
   </v-app>
 </template>
@@ -44,6 +44,7 @@ export default {
         preview: "tab-preview",
       },
       tab: "tab-editor",
+      dialogSettings: false,
     };
   },
   computed: {
@@ -114,12 +115,12 @@ export default {
         //chose a file from open dialog
         //1 - if canceled, simply return
         //2 - if choosing a file, return the path
-        const response = await electronApi.openDialogFile();
+        const response = await electronWrapper.showOpenDialog();
         if (response.canceled) {
           return;
         }
-        await validation.validateFile(response.path);
-        await this.loadMarkdownFile({ path: response.path });
+        await validation.validateFile(response.filePath);
+        await this.loadMarkdownFile({ path: response.filePath });
       } catch (e) {
         await electronWrapper.showErrorBox(
           `Error during opening file: ${e.message}\n\n${
@@ -154,6 +155,9 @@ export default {
         content: this.getEditedFile.content,
       });
     },
+    async menuOnPreferences(){
+      this.dialogSettings = true
+    },
     async onClickMenuItem(_event, data = { tree: [], options: {} }) {
       const tree = data.tree;
       const options = data.options;
@@ -174,6 +178,7 @@ export default {
               break;
             case "Preferences":
               console.log("Click on Menu > File > Preferences");
+              this.menuOnPreferences(options);
               break;
             default:
               break;
@@ -295,6 +300,7 @@ export default {
 
 
 }
+
 .my-custom-class:before {
   background-color: transparent;
   transition: none;

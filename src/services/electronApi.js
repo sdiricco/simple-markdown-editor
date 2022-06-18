@@ -5,7 +5,7 @@ import { ElectronError } from "./errors";
 
 //ELECTRON
 //show electron dialog message
-export async function showMessage(data = {options: {}}) {
+export async function showMessageBox(data = {options: {}}) {
   const response =  await ipcRenderer.invoke("electron/show-message-box", data);
   if (response.error) {
     throw new ElectronError(response.errorMessage)
@@ -13,14 +13,23 @@ export async function showMessage(data = {options: {}}) {
   return response.data;
 }
 
-//save as file to file system
-export async function saveDialog(data = { options: {} }) {
+//show save dialog
+export async function showSaveDialog(data = { options: {} }) {
   const response = await ipcRenderer.invoke("electron/show-save-dialog", data);
   if (response.error) {
     throw new ElectronError(response.errorMessage)
   }
   return response.data;
 }
+
+export async function showOpenDialog(data = {options: {}}) {
+  const response = await ipcRenderer.invoke("electron/show-open-dialog", data);
+  if (response.error) {
+    throw new ElectronError(response.errorMessage)
+  }
+  return response.data;
+}
+
 //set app title
 export async function setTitle(title = "") {
   const response = await ipcRenderer.invoke("app:settitle", title);
@@ -62,13 +71,7 @@ export async function markdownParse(data = {content: ''}) {
   return response.data;
 }
 
-export async function openDialogFile(data = {options: {}}) {
-  const response = await ipcRenderer.invoke("dialog:openfile", data);
-  if (response.error) {
-    throw new ElectronError(response.errorMessage)
-  }
-  return response.data;
-}
+
 
 
 export async function getAppArgs(){

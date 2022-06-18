@@ -25,7 +25,6 @@ protocol.registerSchemesAsPrivileged([
 
 let win;
 
-
 async function createWindow() {
   // Create the browser window.
   win = new BrowserWindow({
@@ -92,7 +91,7 @@ app.on("ready", async (event, info) => {
     } catch (e) {
       console.error("Vue Devtools failed to install:", e.toString());
     }
-  }else{
+  } else {
     //get args only in production mode
     appArgs = process.argv;
   }
@@ -128,11 +127,11 @@ ipcMain.handle("dom:loaded", async () => {
     errorMessage: "",
     data: {
       success: true,
-      info: "created menu template"
+      info: "created menu template",
     },
   };
   appMenu.createTemplate(app, win, onClickMenuItem);
-  return result
+  return result;
 });
 
 function onClickMenuItem(tree, options) {
@@ -162,24 +161,25 @@ function onClickMenuItem(tree, options) {
 /*************************************************************************************/
 
 /* SHOW MESSAGE BOX */
-ipcMain.handle("electron/show-message-box", async (event, data = {options: {}}) => {
-  const result = {
-    error: false,
-    errorMessage: "",
-    data: {
-      response: null,
-      checkboxChecked: null
-    },
-  };
-  try {
-    const dialogOptions = {...data.options}
-    result.data = await dialog.showMessageBox(win, dialogOptions)
-  } catch (e) {
-    result.error = true;
-    result.errorMessage = e.message
+ipcMain.handle(
+  "electron/show-message-box",
+  async (_event, data = { options: {} }) => {
+    const result = {
+      error: false,
+      errorMessage: "",
+      data: null
+    };
+
+    try {
+      result.data = await dialog.showMessageBox(win, data.options);
+    } catch (e) {
+      result.error = true;
+      result.errorMessage = e.message;
+    }
+    
+    return result;
   }
-  return result;
-});
+);
 
 /* SHOW SAVE DIALOG */
 ipcMain.handle(
@@ -188,16 +188,11 @@ ipcMain.handle(
     const result = {
       error: false,
       errorMessage: "",
-      data: {
-        canceled: null,
-        path: null,
-        bookmark: null
-      },
+      data: null
     };
 
     try {
-      const dialogOptions = {...data.options};
-      result.data = await dialog.showSaveDialog(win, dialogOptions);
+      result.data = await dialog.showSaveDialog(win, data.options);
     } catch (e) {
       result.error = true;
       result.errorMessage = e.message;
@@ -207,7 +202,26 @@ ipcMain.handle(
   }
 );
 
+/* SHOW OPEN DIALOG */
+ipcMain.handle(
+  "electron/show-open-dialog",
+  async (_event, data = { options: {} }) => {
+    const result = {
+      error: false,
+      errorMessage: "",
+      data: null,
+    }
 
+    try {
+      result.data = await dialog.showOpenDialog(win, data.options);
+    } catch (e) {
+      result.error = true;
+      result.errorMessage = e.message;
+    }
+
+    return result;
+  }
+);
 
 ipcMain.handle("app:settitle", async (event, message) => {
   const result = {
@@ -223,11 +237,10 @@ ipcMain.handle("app:settitle", async (event, message) => {
     win.setTitle(title);
   } catch (e) {
     e.error = true;
-    e.message = e.message
+    e.message = e.message;
   }
 
-  return result
-
+  return result;
 });
 
 ipcMain.handle("file:changed", (event, value) => {
@@ -265,39 +278,6 @@ ipcMain.handle("markdown:setpath", (event, p) => {
 
   return result;
 });
-
-
-
-ipcMain.handle(
-  "dialog:openfile",
-  async (
-    event,
-    data = { options: { filters: [{ name: "All Files", extensions: ["*"] }] } }
-  ) => {
-    const result = {
-      error: false,
-      errorMessage: "",
-      data: {
-        canceled: false,
-        path: null,
-      },
-    };
-
-    const dialogOptions = { ...data.options, properties: ["openFile"] };
-
-    //get the path of the selected markdown file
-    let response = await dialog.showOpenDialog(win, dialogOptions);
-
-    //if the path does not exist, return
-    if (response.canceled) {
-      result.data.canceled = true;
-      return result;
-    }
-
-    result.data.path = response.filePaths[0];
-    return result;
-  }
-);
 
 ipcMain.handle("file:read", async (evt, data) => {
   console.log("Electron handle > file:read > data:", data);

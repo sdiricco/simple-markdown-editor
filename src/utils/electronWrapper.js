@@ -1,64 +1,76 @@
 import * as electronApi from "../services/electronApi";
+import { dialog } from "../config/electronOptions";
 
-export async function showMessageQuestion(message = '') {
-  const result = {
-    response: {
-      ok: false,
-      cancel: false
-    },
-    checkboxChecked: false
-  };
+//DIALOGS
+//Show message question
+export async function showMessageQuestion(message = "") {
+  const result = dialog.showMessageBox.response;
+
   try {
     const dialogOptions = {
-      title: 'Info',
+      ...dialog.showMessageBox.options,
       message: message,
-      type: 'question',
-      buttons: ['ok', 'cancel']
-    }
-
-    const electronResult = await electronApi.showMessage({options: dialogOptions});
+    };
+    const electronResult = await electronApi.showMessageBox({
+      options: dialogOptions,
+    });
     const indexButton = electronResult.response;
     const button = dialogOptions.buttons[indexButton];
-
     result.response[button] = true;
   } catch (e) {
     console.log("Error in showMessageQuestion", e);
-    throw(e)
+    throw e;
   }
+
   return result;
-
 }
 
-export async function showSaveDialog(){
-  let result = {
-    canceled:null,
-    filePath: '',
-    bookmark: ''
-  };
-  try {
-    const dialogOptions = {
-      defaultPath: 'Document.md',
-      filters: [{ name: "Markdown", extensions: ["md", "markdown"] }],
-    }
-    result = await electronApi.saveDialog({options: dialogOptions})
-  } catch (e) {
-    console.log("Error in showSaveDialog", e);
-    throw(e)
-  }
-  console.log("result", result);
-  return result
-}
+//Show error box
+export async function showErrorBox(message = "") {
+  const result = dialog.showErrorBox.response;
 
-export async function showErrorBox(message = ''){
   try {
-    const dialogOptions = {
-      title: 'Error',
-      message: message,
-      type: 'error',
-    }
-    await electronApi.showMessage({options: dialogOptions});
+    const dialogOptions = { ...dialog.showErrorBox.options, message: message };
+    await electronApi.showMessageBox({ options: dialogOptions });
   } catch (e) {
     console.log("Error in showMessageQuestion", e);
-    throw(e)
+    throw e;
   }
+
+  return result;
+}
+
+//Show save dialog
+export async function showSaveDialog() {
+  let result = dialog.showSaveDialog.response;
+
+  try {
+    const dialogOptions = dialog.options.showSaveDialog;
+    result = await electronApi.showSaveDialog({ options: dialogOptions });
+  } catch (e) {
+    console.log("Error in showSaveDialog", e);
+    throw e;
+  }
+
+  return result;
+}
+
+//Show open dialog
+export async function showOpenDialog() {
+  let result = dialog.showOpenDialog.response;
+
+  try {
+    const dialogOptions = dialog.showOpenDialog.options;
+    const r = await electronApi.showOpenDialog({ options: dialogOptions });
+    result = {
+      canceled: r.canceled,
+      filePath: r.filePaths[0],
+      bookmark: r.bookmark,
+    };
+  } catch (e) {
+    console.log("Error in showSaveDialog", e);
+    throw e;
+  }
+
+  return result;
 }
