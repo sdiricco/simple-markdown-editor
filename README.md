@@ -2,13 +2,15 @@
 
 A simple markdown editor
 
-![](./sample-image.png)
+![](./sample-preview.png)
+![](./sample-editor.png)
+
 
 ## Download
 
-[Download here](https://github.com/sdiricco/simple-markdown-editor/releases/tag/1.0.2) the latest version, v1.0.2.
+[Download here](https://github.com/sdiricco/simple-markdown-editor/releases/tag/2.0.0) the latest version, v2.0.0.
 
-Available for [Linux](https://github.com/sdiricco/simple-markdown-editor/releases/tag/1.0.2) and [Windows](https://github.com/sdiricco/simple-markdown-editor/releases/tag/1.0.2)
+Available for [Linux](https://github.com/sdiricco/simple-markdown-editor/releases/tag/2.0.0) and [Windows](https://github.com/sdiricco/simple-markdown-editor/releases/tag/2.0.0)
 
 
 ## Develope

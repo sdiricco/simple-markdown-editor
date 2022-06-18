@@ -1,5 +1,6 @@
 import * as nodeApi from "./nodeApi";
 import { ValidationError } from "./errors";
+import path from "path"
 
 export async function validateArgs(
   args = [],
@@ -25,6 +26,11 @@ export async function validateArgs(
       const validPath = await nodeApi.exsistPath(p);
       if (!validPath) {
         throw new ValidationError(`${p} is not a valid path`);
+      }
+      const validMarkdown = path.extname(p) !== '.md' || path.extname(p) !== '.markdown';
+      console.log("validMarkdown", validMarkdown);
+      if (!validMarkdown) {
+        throw new ValidationError(`${p} is not a markdown file`);
       }
     }
   }

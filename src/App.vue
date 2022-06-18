@@ -249,16 +249,17 @@ export default {
       try {
         //get the app args
         const response = await electronApi.getAppArgs();
+        console.log("args", response);
         //If there are not args, simply returns
         if (!response.args) {
           console.log("App launched without any files");
           return;
         }
         //if there are args, validate them
-        await validation.validateArgs(response.args, { multipleArgs: false });
+        //await validation.validateArgs(response.args, { multipleArgs: false });
         //the args rapresents the path of markdown files
-        const markdownFilePath = response.data.args[0];
-        await this.loadMarkdownFile({ path: markdownFilePath });
+        //const markdownFilePath = response.args[0];
+        //await this.loadMarkdownFile({ path: markdownFilePath });
       } catch (e) {
         console.log(e.message);
         console.log(e.details);
