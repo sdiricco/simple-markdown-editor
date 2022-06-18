@@ -15,7 +15,7 @@
           >Preview</v-tab
         >
       </v-tabs>
-      <div class="m-container">
+      <div class="m-container" @drag="drag" @dragenter="dragEnter" @dragover="dragOver" @drop="drop" >
         <Editor v-if="tab === tabs.editor" />
         <Preview v-if="tab === tabs.preview" />
       </div>

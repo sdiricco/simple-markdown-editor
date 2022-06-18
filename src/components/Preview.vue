@@ -1,5 +1,5 @@
 <template>
-  <div class="m-wrapper d-flex justify-center">
+  <div class="m-wrapper">
     <div
       class="m-container markdown-body"
       :style="{ height: height }"
@@ -71,6 +71,7 @@ export default {
 .m-container {
   padding: 16px;
   max-width: 900px;
+  margin: auto;
 }
 
 .m-wrapper {

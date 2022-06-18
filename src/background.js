@@ -28,8 +28,11 @@ let win;
 async function createWindow() {
   // Create the browser window.
   win = new BrowserWindow({
+    show:false,
     width: 800,
     height: 600,
+    minWidth: 400,
+    minHeight: 200,
     webPreferences: {
       // Use pluginOptions.nodeIntegration, leave this alone
       // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
@@ -39,6 +42,8 @@ async function createWindow() {
       backgroundThrottling: false,
     },
   });
+  win.maximize();
+  win.show();
 
   win.on("close", async (e) => {
     if (!fileChanged) {
