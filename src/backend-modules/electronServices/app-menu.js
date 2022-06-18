@@ -71,16 +71,16 @@ function createTemplate(app, window, onClickItem) {
               event: event,
             }),
         },
-        // { type: "separator" },
-        // {
-        //   label: "Preferences",
-        //   click: (menuItem, browserWindow, event) =>
-        //     onClickItem(["File", "Preferences"], {
-        //       menuItem: menuItem,
-        //       browserWindow: browserWindow,
-        //       event: event,
-        //     }),
-        // },
+        { type: "separator" },
+        {
+          label: "Preferences",
+          click: (menuItem, browserWindow, event) =>
+            onClickItem(["File", "Preferences"], {
+              menuItem: menuItem,
+              browserWindow: browserWindow,
+              event: event,
+            }),
+        },
         { type: "separator" },
         isMac ? { role: "close" } : { role: "quit" },
       ],
