@@ -298,7 +298,7 @@ export default {
 
 .my-custom-class{
   border-radius: 4px 4px 0px 0px;
-
+  color: var(--v-primary);
 
 }
 

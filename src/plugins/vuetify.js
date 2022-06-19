@@ -10,12 +10,14 @@ export default new Vuetify({
     iconfont: "mdiSvg", // 'mdi' || 'mdiSvg' || 'md' || 'fa' || 'fa4' || 'faSvg'
   },
   theme: {
+    options: {customProperties: true},
     themes: {
       light: {
-        primary: colors.purple,
+        primary: colors.blue.lighten1,
+        accent: colors.pink        
       },
       dark: {
-        primary: colors.blue.lighten3,
+        primary: colors.blue.lighten1,
       },
     },
   },
