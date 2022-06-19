@@ -6,7 +6,7 @@
     </v-card-text>
     <v-card-text>
       <v-switch
-        v-model="$vuetify.theme.dark"
+        disabled
         inset
         label="Toggle theme"
       ></v-switch>

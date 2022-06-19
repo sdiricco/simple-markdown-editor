@@ -14,10 +14,13 @@ export default new Vuetify({
     themes: {
       light: {
         primary: colors.blue.lighten1,
-        accent: colors.pink        
+        accent: colors.pink,
+        background: '#282a36'
       },
       dark: {
         primary: colors.blue.lighten1,
+        background: '#282a36'
+
       },
     },
   },

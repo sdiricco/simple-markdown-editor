@@ -1,7 +1,14 @@
 <template>
   <v-app>
     <v-main>
-      <v-tabs background-color="#2c2c2c" class="tabs-custom-style" v-model="tab" hide-slider center-active height="32px" dark>
+      <v-tabs
+        class="tabs-custom-style"
+        v-model="tab"
+        hide-slider
+        center-active
+        height="40px"
+        dark
+      >
         <v-tab
           active-class="my-custom-active-class"
           class="my-custom-class"
@@ -15,9 +22,19 @@
           >Preview</v-tab
         >
       </v-tabs>
-      <div class="m-container" @drag="drag" @dragenter="dragEnter" @dragover="dragOver" @drop="drop" >
-        <Editor v-if="tab === tabs.editor" />
-        <Preview v-if="tab === tabs.preview" />
+      <div
+        class="m-container"
+        @drag="drag"
+        @dragenter="dragEnter"
+        @dragover="dragOver"
+        @drop="drop"
+      >
+        <v-scroll-x-transition hide-on-leave>
+          <Editor v-if="tab === tabs.editor" />
+        </v-scroll-x-transition>
+        <v-scroll-x-transition hide-on-leave>
+          <Preview v-if="tab === tabs.preview" />
+        </v-scroll-x-transition>
       </div>
       <Settings v-model="dialogSettings" />
     </v-main>
@@ -91,8 +108,8 @@ export default {
     toggleView() {
       const tabs = Object.values(this.tabs);
       let idx = tabs.indexOf(this.tab);
-      idx = (idx >= tabs.length - 1) ? 0 : idx + 1;
-      this.tab = tabs[idx]
+      idx = idx >= tabs.length - 1 ? 0 : idx + 1;
+      this.tab = tabs[idx];
     },
     onInputTextIDE(event) {
       this.setEditedFile({ content: event.target.value });
@@ -146,7 +163,7 @@ export default {
     },
     //On click: Menu > Save as
     async menuOnSaveAs() {
-      const {canceled, filePath} = await electronWrapper.showSaveDialog();
+      const { canceled, filePath } = await electronWrapper.showSaveDialog();
       if (canceled) {
         return;
       }
@@ -155,8 +172,8 @@ export default {
         content: this.getEditedFile.content,
       });
     },
-    async menuOnPreferences(){
-      this.dialogSettings = true
+    async menuOnPreferences() {
+      this.dialogSettings = true;
     },
     async onClickMenuItem(_event, data = { tree: [], options: {} }) {
       const tree = data.tree;
@@ -268,6 +285,7 @@ export default {
     },
   },
   async created() {
+    this.$vuetify.theme.dark = true;
     ipcRenderer.on("menu:action", this.onClickMenuItem);
     try {
       await electronApi.domLoaded();
@@ -285,21 +303,22 @@ export default {
 
 <style scoped>
 .m-container {
-  height: calc(100vh - 32px);
+  height: calc(100vh - 40px);
   overflow-y: auto;
-  background-color: rgb(40, 42, 54);
+  background-color: var(--v-background-base);
 }
 
 .my-custom-active-class {
-  background-color: rgb(40, 42, 54);
+  background-color: var(--v-background-base);
   border-radius: 4px 4px 0px 0px;
-
 }
 
-.my-custom-class{
+.my-custom-class {
+  margin-top: 4px;
+  margin-right: 4px;
   border-radius: 4px 4px 0px 0px;
   color: var(--v-primary);
-
+  border-top: 1px solid;
 }
 
 .my-custom-class:before {

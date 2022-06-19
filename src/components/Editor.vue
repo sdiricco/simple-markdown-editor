@@ -1,5 +1,5 @@
 <template>
-  <div class="m-container">
+  <div class="m-container" id="codemirror-t">
     <textarea v-model="code" id="editor"></textarea>
   </div>
 </template>

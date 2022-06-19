@@ -1,8 +1,12 @@
 <template>
-  <v-dialog v-model="dialog" width="800" >
-    <v-card class="m-container d-flex">
-      <v-toolbar flat color="primary" height="40px">
+  <v-dialog v-model="dialog" width="800" class="dialog-settings">
+    <v-card class="m-container">
+      <v-toolbar flat color="primary" height="64px">
         <v-toolbar-title>Settings</v-toolbar-title>
+        <v-spacer></v-spacer>
+        <v-btn icon dark @click="dialog = false">
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
       </v-toolbar>
       <v-container dense class="m-content overflow-y-auto">
         <v-row no-gutters class="m-content">
@@ -35,54 +39,48 @@
 </template>
 
 <script>
-import Hotkeys from './Hotkeys.vue';
-import Theme from './Theme.vue';
+import Hotkeys from "./Hotkeys.vue";
+import Theme from "./Theme.vue";
 export default {
-    name: "Settings",
-    props: ["value"],
-    model: {
-        prop: "value",
-        event: "change",
+  name: "Settings",
+  props: ["value"],
+  model: {
+    prop: "value",
+    event: "change",
+  },
+  theme: false,
+  data() {
+    return {
+      tab: null,
+    };
+  },
+  computed: {
+    dialog: {
+      get() {
+        return this.value;
+      },
+      set(val) {
+        this.$emit("change", val);
+      },
     },
-    theme: false,
-    data() {
-        return {
-            tab: null,
-        };
-    },
-    computed: {
-        dialog: {
-            get() {
-                return this.value;
-            },
-            set(val) {
-                this.$emit("change", val);
-            },
-        },
-    },
-    methods: {
-        onChangeTheme(isDark) {
-            if (isDark) {
-                this.$vuetify.theme.dark;
-            }
-            else {
-                this.$vuetify.theme.light;
-            }
-        },
-    },
-    components: { Hotkeys, Theme }
+  },
+  components: { Hotkeys, Theme },
 };
 </script>
 
 <style scoped>
+
+.dialog-settings{
+  overflow-x: hidden;
+}
 .m-container {
   height: calc(min(90vh, 600px));
   display: flex;
   flex-direction: column;
 }
 
-.content-item{
-  height: calc(min(90vh, 600px) - 40px);
+.content-item {
+  height: calc(min(90vh, 600px) - 64px);
   overflow-y: auto;
 }
 
@@ -104,6 +102,6 @@ export default {
 }
 
 .left-menu {
-  border-right: 1px solid #e1e1e1;
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
 }
 </style>

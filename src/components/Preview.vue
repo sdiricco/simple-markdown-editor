@@ -75,6 +75,5 @@ export default {
 }
 
 .m-wrapper {
-  background-color: rgb(40, 42, 54);
 }
 </style>

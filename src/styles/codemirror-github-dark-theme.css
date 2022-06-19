@@ -4,11 +4,11 @@
  * Licensed under MIT (https://github.com/primer/github-syntax-theme-generator/blob/master/LICENSE)
  */
 .CodeMirror {
-  background: rgb(40.42,54);
+  background: rgb(40, 42,54);
   color: #c9d1d9; }
 
  .CodeMirror-gutters {
-  background: rgb(40.42,54);
+  background: rgb(40,42,54);
   border-right-width: 0; }
 
  .CodeMirror-guttermarker {
