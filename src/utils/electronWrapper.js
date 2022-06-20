@@ -45,7 +45,7 @@ export async function showSaveDialog() {
   let result = dialog.showSaveDialog.response;
 
   try {
-    const dialogOptions = dialog.options.showSaveDialog;
+    const dialogOptions = dialog.showSaveDialog.options;
     result = await electronApi.showSaveDialog({ options: dialogOptions });
   } catch (e) {
     console.log("Error in showSaveDialog", e);

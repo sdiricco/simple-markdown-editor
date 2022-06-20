@@ -13,13 +13,15 @@
           active-class="my-custom-active-class"
           class="my-custom-class"
           href="#tab-editor"
-          >Editor</v-tab
+          ><v-icon color="brown" small class="pr-1">mdi-language-markdown-outline</v-icon
+          >{{getInitialFile.name || 'Untiled-1.md'}} <v-icon color="#fff" class="pl-1" x-small v-if="getIsFileModified">mdi-circle</v-icon></v-tab
         >
         <v-tab
           href="#tab-preview"
           active-class="my-custom-active-class"
           class="my-custom-class"
-          >Preview</v-tab
+          >
+            <v-icon color="#ccc" small class="pr-1">mdi-text-box-search-outline</v-icon>{{getInitialFile.name || 'Untiled-1.md'}}</v-tab
         >
       </v-tabs>
       <div
@@ -310,15 +312,14 @@ export default {
 
 .my-custom-active-class {
   background-color: var(--v-background-base);
-  border-radius: 4px 4px 0px 0px;
+  border-radius: 2px 2px 0px 0px;
 }
 
 .my-custom-class {
   margin-top: 4px;
-  margin-right: 4px;
   border-radius: 4px 4px 0px 0px;
-  color: var(--v-primary);
-  border-top: 1px solid;
+  color: #fff;
+  text-transform: none;
 }
 
 .my-custom-class:before {

@@ -12,7 +12,7 @@ export const dialog = {
       },
       showSaveDialog: {
         options: {
-          defaultPath: "Document.md",
+          defaultPath: "Untiled-1.md",
           filters: [{ name: "Markdown", extensions: ["md", "markdown"] }],
         },
         response: {
