@@ -22,7 +22,7 @@ marked.setOptions({
     const language = hljs.getLanguage(lang) ? lang : "plaintext";
     return hljs.highlight(code, { language }).value;
   },
-  langPrefix: "hljs language-", // highlight.js css expects a top-level 'hljs' class.
+  langPrefix: "hljs language-",
   pedantic: false,
   gfm: true,
   breaks: false,
@@ -34,22 +34,16 @@ marked.setOptions({
 
 marked.use({ renderer });
 
-/**
- *
- * @param {String} content markdown input
- * @returns {String} html content
- */
-export function markdownToHtml(content = "") {
-  console.log("Parsing markdown");
-  return marked.parse(content);
+
+export function parse(data = {content: null, path: null}) {
+  try {
+    if (data.path && data.path !== '') {
+      basePath = path.dirname(data.path)
+    }
+    return marked.parse(data.content);
+  } catch (e) {
+    throw(e)
+  }
+
 }
 
-/**
- *
- * @param {String} p
- * @returns {void}
- */
-export function setFilePath(p = "") {
-  console.log("path set to", p);
-  basePath = path.dirname(p);
-}

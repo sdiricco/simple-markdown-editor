@@ -32,39 +32,25 @@ export async function showOpenDialog(data = {options: {}}) {
 
 //set app title
 export async function setTitle(title = "") {
-  const response = await ipcRenderer.invoke("app:settitle", title);
+  const response = await ipcRenderer.invoke("window/set-title", title);
   if (response.error) {
     throw new ElectronError(response.errorMessage)
   }
   return response.data;
 }
-//notify electron main that the edit file is changed
-export async function fileChanged(value) {
-  const response = ipcRenderer.invoke("file:changed", value);
-  if (response.error) {
-    throw new ElectronError(response.errorMessage)
-  }
-  return response.data;
-}
+
 //notify electron main that the dom is correctly loaded
-export async function domLoaded() {
-  const response = await ipcRenderer.invoke("dom:loaded");
+export async function reanderReady() {
+  const response = await ipcRenderer.invoke("render/ready");
   if (response.error) {
     throw new ElectronError(response.errorMessage)
   }
   return response.data;
 }
 
-export async function setMarkdownPath(p = '') {
-  const response = await ipcRenderer.invoke("markdown:setpath", p)
-  if (response.error) {
-    throw new ElectronError(response.errorMessage)
-  }
-  return response.data;
-}
 
-export async function markdownParse(data = {content: ''}) {
-  const response = await ipcRenderer.invoke("markdown:parse", data.content)
+export async function markdownParse(data = {content: null, path: null}) {
+  const response = await ipcRenderer.invoke("markdown/parse", data)
   if (response.error) {
     throw new ElectronError(response.errorMessage)
   }
@@ -75,7 +61,7 @@ export async function markdownParse(data = {content: ''}) {
 
 
 export async function getAppArgs(){
-  const response = await ipcRenderer.invoke("app:getargs");
+  const response = await ipcRenderer.invoke("app/getargs");
   if (response.error) {
     throw new ElectronError(response.errorMessage)
   }

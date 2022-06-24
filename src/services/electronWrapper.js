@@ -1,4 +1,4 @@
-import * as electronApi from "../services/electronApi";
+import * as electronApi from "./electronApi";
 import { dialog } from "../config/electronOptions";
 
 //DIALOGS

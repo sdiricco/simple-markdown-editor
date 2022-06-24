@@ -1,6 +1,6 @@
 ////////////////////////////////////// Global Requires \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-const { Menu } = require("electron");
-const R = require("ramda");
+import { Menu } from "electron";
+import * as R from "ramda";
 
 ////////////////////////////////////// Global Constants \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 const isMac = process.platform === "darwin";
@@ -10,12 +10,12 @@ let defaultTemplate = [];
 let template = [];
 
 ////////////////////////////////////// Global Functions \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-function buildMenuFromTemplate(window, template) {
+export function buildMenuFromTemplate(window, template) {
   const menu = Menu.buildFromTemplate(template);
   window.setMenu(menu);
 }
 
-function createTemplate(app, window, onClickItem) {
+export function create(app, window, onClickItem) {
   let __template = [
     // { role: 'appMenu' }
     ...(isMac
@@ -41,10 +41,12 @@ function createTemplate(app, window, onClickItem) {
       label: "File",
       submenu: [
         {
+          id: "file-open",
           label: "Open",
           accelerator: "Ctrl + O",
           click: (menuItem, browserWindow, event) =>
             onClickItem(["File", "Open"], {
+              options: optionsFiltered(menuItem),
               menuItem: menuItem,
               browserWindow: browserWindow,
               event: event,
@@ -52,20 +54,24 @@ function createTemplate(app, window, onClickItem) {
         },
         { type: "separator" },
         {
+          id: "file-save",
           label: "Save",
           accelerator: "Ctrl + S",
           click: (menuItem, browserWindow, event) =>
             onClickItem(["File", "Save"], {
+              options: optionsFiltered(menuItem),
               menuItem: menuItem,
               browserWindow: browserWindow,
               event: event,
             }),
         },
         {
+          id: "file-saveas",
           label: "Save as..",
           accelerator: "Ctrl + Shift + S",
           click: (menuItem, browserWindow, event) =>
             onClickItem(["File", "Save as.."], {
+              options: optionsFiltered(menuItem),
               menuItem: menuItem,
               browserWindow: browserWindow,
               event: event,
@@ -73,9 +79,11 @@ function createTemplate(app, window, onClickItem) {
         },
         { type: "separator" },
         {
+          id: "file-preferences",
           label: "Preferences",
           click: (menuItem, browserWindow, event) =>
             onClickItem(["File", "Preferences"], {
+              options: optionsFiltered(menuItem),
               menuItem: menuItem,
               browserWindow: browserWindow,
               event: event,
@@ -111,6 +119,7 @@ function createTemplate(app, window, onClickItem) {
     },
     // { role: 'windowMenu' }
     {
+      id: "view-toggle",
       label: "View",
       submenu: [
         {
@@ -118,6 +127,7 @@ function createTemplate(app, window, onClickItem) {
           accelerator: "Ctrl + Tab",
           click: (menuItem, browserWindow, event) =>
             onClickItem(["View", "Toogle window"], {
+              options: optionsFiltered(menuItem),
               menuItem: menuItem,
               browserWindow: browserWindow,
               event: event,
@@ -151,16 +161,6 @@ function createTemplate(app, window, onClickItem) {
     {
       role: "help",
       submenu: [
-        // {
-        //   label: "Hotkeys",
-        //   accelerator: "Ctrl + Shift + H",
-        //   click: (menuItem, browserWindow, event) =>
-        //     onClickItem(["Help", "Hotkeys"], {
-        //       menuItem: menuItem,
-        //       browserWindow: browserWindow,
-        //       event: event,
-        //     }),
-        // },
         {
           label: "Learn More",
           click: (menuItem, browserWindow, event) =>
@@ -178,7 +178,7 @@ function createTemplate(app, window, onClickItem) {
   buildMenuFromTemplate(window, template);
 }
 
-function updateTemplateItem(window, tree, content, __template) {
+export function updateTemplateItem(window, tree, content, __template) {
   if (__template === undefined) {
     __template = template;
   }
@@ -202,5 +202,23 @@ function updateTemplateItem(window, tree, content, __template) {
   }
 }
 
-////////////////////////////////////// Exports \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-module.exports = { updateTemplateItem, createTemplate };
+function optionsFiltered(menuItem) {
+  return {
+    id: menuItem.id || null,
+    label: menuItem.label || null,
+    type: menuItem.type || null,
+    checked: menuItem.checked || null,
+    role: menuItem.role || null,
+    accelerator: menuItem.accelerator || null,
+    sublabel: menuItem.sublabel || null,
+    toolTip: menuItem.toolTip || null,
+    enabled: menuItem.enabled || null,
+    visible: menuItem.visible || null,
+    acceleratorWorksWhenHidden:
+      menuItem.acceleratorWorksWhenHidden || null,
+    registerAccelerator: menuItem.registerAccelerator || null,
+    commandId: menuItem.commandId || null,
+  };
+}
+
+

@@ -1,5 +1,9 @@
 import * as nodeApi from "../../services/nodeApi";
 import * as electronApi from "../../services/electronApi";
+import * as electronWrapper from "../../services/electronWrapper";
+import * as validation from "../../services/validation";
+import path from "path"
+
 const namespaced = true;
 
 const state = {
@@ -49,14 +53,14 @@ const actions = {
         name: result.file.name,
         path: result.file.path,
         content: result.file.content,
-        ext: result.file.ext
+        ext: result.file.ext,
       });
       commit("setInitialFile", {
         name: result.file.name,
         path: result.file.path,
         content: result.file.content,
         ext: result.file.ext,
-        stat: result.file.stat
+        stat: result.file.stat,
       });
       commit("setIsReadingFile", false);
       return result.file;
@@ -85,8 +89,8 @@ const actions = {
     try {
       console.log("STORE > ACTIONS > markdownToHtml");
       commit("setIsBuildingFile", true);
-      await electronApi.setMarkdownPath(data.path);
-      const result = await electronApi.markdownParse({ content: data.content });
+      const result = await electronApi.markdownParse({ content: data.content, path: data.path });
+      console.log("result", result);
       commit("setBuiltFile", { html: result.content, content: data.content });
       commit("setIsBuildingFile", false);
     } catch (e) {
@@ -117,6 +121,109 @@ const actions = {
     commit("setFileContent", data.content);
     commit("setOpenNewFile", false);
   },
+
+  /**********************************************************************************/
+  /* PUBLIC HANDLES */
+
+  /* On Click: Menu > File > Save */
+  async handleOnMenuSave({ dispatch, getters }) {
+    if (!getters.getIsFileModified) {
+      return;
+    }
+    if (getters.getInitialFile.path === "") {
+      await dispatch('handleOnMenuSaveAs');
+      return;
+    }
+    await dispatch("saveFile", {
+      path: getters.getInitialFile.path,
+      content: getters.getEditedFile.content,
+    });
+  },
+
+  /* On Click: Menu > File > Save as */
+  async handleOnMenuSaveAs({ dispatch, getters }) {
+    const { canceled, filePath } = await electronWrapper.showSaveDialog();
+    if (canceled) {
+      return;
+    }
+    await dispatch("saveFile", {
+      path: filePath,
+      content: getters.getEditedFile.content,
+    });
+  },
+
+  //On Click: Menu > File > Open
+  async handleOnMenuOpen({dispatch, getters}) {
+    try {
+      //if file has changed, show message info.
+      //1 - if user click on cancel, siply return
+      //2 - if user click on ok, continue choosing file from open dialog
+      if (getters.getIsFileModified) {
+        const {canceled} = await electronWrapper.showMessageQuestion(
+          "The file has changed. Are you sure you want to open a new file without saving?"
+        );
+        if (canceled) return;
+      }
+      //chose a file from open dialog
+      //1 - if canceled, simply return
+      //2 - if choosing a file, return the path
+      const {canceled, filePath} = await electronWrapper.showOpenDialog();
+      if (canceled) return;
+
+      await validation.validateFile(filePath);
+      await dispatch('loadMarkdownFile', {path: filePath });
+
+    } catch (e) {
+      await electronWrapper.showErrorBox(
+        `Error during opening file: ${e.message}\n\n${
+          e.details ? "Details: " + e.details : ""
+        }`
+      );
+    }
+  },
+
+  //On Drop files
+  async handleDropFiles({dispatch}, data={files: []}){
+    try {
+      const filePaths = Object.values(data.files).map((f) => f.path);
+      console.log("files", filePaths);
+      await validation.validateFiles(filePaths);
+      await dispatch('loadMarkdownFile', { path: filePaths[0] });
+    } catch (e) {
+      console.log(e.message);
+      console.log(e.details);
+      await electronWrapper.showErrorBox(
+        `Error during the drop files: ${e.message}\n\n${
+          e.details ? "Details: " + e.details : ""
+        }`
+      );
+    }
+  },
+
+  async init({dispatch}){
+    try {
+      //get the app args
+      const {args} = await electronApi.reanderReady();
+
+      //filter only md files
+      const files = args.filter(a => path.extname(a) === ".md")
+
+      //If there are not files, simply returns
+      if (!files.length) {
+        console.log("App launched without any files");
+        return;
+      }
+      
+      //Only one file is supported
+      await dispatch('loadMarkdownFile', { path: files[0] });
+    } catch (e) {
+      console.log(e.message);
+      console.log(e.details);
+      throw e;
+    }
+  }
+
+  
 };
 
 const mutations = {

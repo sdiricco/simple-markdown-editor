@@ -12,6 +12,7 @@
 
 <script>
 import { mapGetters, mapActions } from "vuex";
+import * as electronWrapper from "../services/electronWrapper"
 import Spinner from "./Spinner.vue";
 export default {
   name: "Preview",
@@ -47,19 +48,35 @@ export default {
   watch: {
     getOpenNewFile: async function (isNewFile) {
       if (isNewFile) {
-        await this.buildFile({
-          content: this.getEditedFile.content,
-          path: this.getFilePath,
-        });
+        try {
+          await this.buildFile({
+            content: this.getEditedFile.content,
+            path: this.getFilePath,
+          });
+        } catch (e) {
+          await electronWrapper.showErrorBox(
+            `Error during building the app: ${
+              e.message
+            }\n\n${e.details ? "Details: " + e.details : ""}`
+          );
+        }
       }
     },
   },
   async mounted() {
     if (this.getShouldStartTheBuild) {
-      await this.buildFile({
-        content: this.getEditedFile.content,
-        path: this.getFilePath,
-      });
+      try {
+        await this.buildFile({
+          content: this.getEditedFile.content,
+          path: this.getFilePath,
+        });
+      } catch (e) {
+        await electronWrapper.showErrorBox(
+          `Error during building the app: ${e.message}\n\n${
+            e.details ? "Details: " + e.details : ""
+          }`
+        );
+      }
     }
   },
 };

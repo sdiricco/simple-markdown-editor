@@ -21,6 +21,7 @@
     "codemirror-github-dark": "^0.4.1",
     "core-js": "^3.6.5",
     "electron-rebuild": "^3.2.7",
+    "eventemitter3": "^4.0.7",
     "github-markdown-css": "^5.1.0",
     "highlight.js": "^11.5.1",
     "less-loader": "^10.2.0",
