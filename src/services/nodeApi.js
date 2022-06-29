@@ -17,14 +17,14 @@ export async function readFile(filePath = "") {
       name: "",
       ext: "",
       path: "",
-      content: "",
+      value: "",
       stat: {},
     },
   };
 
   try {
     const buffer = await fsProm.readFile(filePath);
-    result.file.content = buffer.toString("utf8");
+    result.file.value = buffer.toString("utf8");
     result.file.stat = await fsProm.stat(filePath);
     result.file.name = path.basename(filePath);
     result.file.path = filePath;
@@ -38,12 +38,15 @@ export async function readFile(filePath = "") {
 }
 
 //save file
-export async function saveFile(data = {path: '', content: ''}){
+export async function saveFile({filePath = null, value = null}){
+  console.log("SAVE FILE ARGS");
+  console.log("filePath", filePath);
+  console.log("value", value);
   const result = {
     success: false,
   };
   try {
-    await fsProm.writeFile(data.path, data.content);
+    await fsProm.writeFile(filePath, value);
     result.success = true;
   } catch (e) {
     console.log(e)

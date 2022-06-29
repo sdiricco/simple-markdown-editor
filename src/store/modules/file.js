@@ -3,7 +3,7 @@ import * as nodeApi from "../../services/nodeApi";
 const namespaced = true;
 
 const state = {
-  name: "",
+  name: "Untiled-1.md",
   value: "",
   ext: "",
   path: "",
@@ -19,7 +19,7 @@ const getters = {
 };
 
 const actions = {
-  async read({ commit }, { filePath = null }) {
+  async read({ commit }, filePath) {
     try {
       console.log("STORE > ACTIONS > readFile");
       const { file } = await nodeApi.readFile(filePath);
@@ -35,7 +35,7 @@ const actions = {
     try {
       console.log("STORE > ACTIONS > saveFile");
       await nodeApi.saveFile({ filePath: filePath, value: value });
-      await dispatch("readFile", { filePath: filePath });
+      await dispatch("read", filePath);
     } catch (e) {
       console.log("Error in actions.saveFile", e.message);
       throw e;

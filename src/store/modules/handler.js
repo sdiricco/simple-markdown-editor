@@ -7,7 +7,7 @@ const namespaced = true;
 
 const getters = {
   getFileHasChanged: (_state, _getters, _rootState, rootGetters) =>
-    rootGetters["main/getFile"].value !== rootGetters["editor/getFile"].value,
+    rootGetters["file/getValue"] !== rootGetters["editor/getValue"],
 };
 
 const actions = {
@@ -17,10 +17,10 @@ const actions = {
     const editorValue = rootGetters["editor/getValue"];
 
     if (filePath === "") {
-      await dispatch("handleOnMenuSaveAs");
+      await dispatch("onMenuSaveAs");
       return;
     }
-    await dispatch("file/save", { path: filePath, content: editorValue }, { root: true });
+    await dispatch("file/save", { filePath: filePath, value: editorValue }, { root: true });
   },
 
   /* On Click: Menu > File > Save as */
@@ -87,6 +87,7 @@ const actions = {
 
   async onInit({ dispatch }) {
     try {
+
       //get the app args
       const { args } = await electronApi.reanderReady();
 
@@ -100,6 +101,7 @@ const actions = {
       }
 
       await dispatch('loadFile', {filePath: filePaths[0]})
+
     } catch (e) {
       console.log(e.message);
       console.log(e.details);
@@ -108,14 +110,15 @@ const actions = {
   },
 
 
-  loadFile({dispatch}, {filePath = ''}){
-    const { value } = await dispatch("file/read", { filePath: filePath }, { root: true });
-    await dispatch("editor/setValue", { value: value }, { root: true });
-    await dispatch("markdown/parse", {}, {root:true});
+  async loadFile({dispatch}, {filePath = ''}){
+    let { value } = await dispatch("file/read", filePath, { root: true });
+    await dispatch("editor/setValue", value, { root: true });
+    await dispatch("editor/reload", null, { root: true });
   },
 };
 
 export default {
   namespaced,
   actions,
+  getters
 };

@@ -55,7 +55,7 @@ export async function showOpenDialog(win, data = { options: {} }){
 }
 
 /* Set browser title */
-export async function setTitle(win, data = {message: null}){
+export async function setTitle(win, title){
   const result = {
     error: false,
     errorMessage: "",
@@ -64,7 +64,7 @@ export async function setTitle(win, data = {message: null}){
     },
   };
   try {
-    win.setTitle(data.message);
+    win.setTitle(title);
   } catch (e) {
     e.error = true;
     e.message = e.message;

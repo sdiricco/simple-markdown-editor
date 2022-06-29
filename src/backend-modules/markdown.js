@@ -35,12 +35,12 @@ marked.setOptions({
 marked.use({ renderer });
 
 
-export function parse(data = {content: null, path: null}) {
+export function parse(data = {value: null, path: null}) {
   try {
     if (data.path && data.path !== '') {
       basePath = path.dirname(data.path)
     }
-    return marked.parse(data.content);
+    return marked.parse(data.value);
   } catch (e) {
     throw(e)
   }

@@ -41,7 +41,7 @@ export function create(app, window, onClickItem) {
       label: "File",
       submenu: [
         {
-          id: "file-open",
+          id: "file/open",
           label: "Open",
           accelerator: "Ctrl + O",
           click: (menuItem, browserWindow, event) =>
@@ -54,7 +54,7 @@ export function create(app, window, onClickItem) {
         },
         { type: "separator" },
         {
-          id: "file-save",
+          id: "file/save",
           label: "Save",
           accelerator: "Ctrl + S",
           click: (menuItem, browserWindow, event) =>
@@ -66,7 +66,7 @@ export function create(app, window, onClickItem) {
             }),
         },
         {
-          id: "file-saveas",
+          id: "file/saveas",
           label: "Save as..",
           accelerator: "Ctrl + Shift + S",
           click: (menuItem, browserWindow, event) =>
@@ -79,7 +79,7 @@ export function create(app, window, onClickItem) {
         },
         { type: "separator" },
         {
-          id: "file-preferences",
+          id: "file/preferences",
           label: "Preferences",
           click: (menuItem, browserWindow, event) =>
             onClickItem(["File", "Preferences"], {
@@ -119,10 +119,10 @@ export function create(app, window, onClickItem) {
     },
     // { role: 'windowMenu' }
     {
-      id: "view-toggle",
       label: "View",
       submenu: [
         {
+          id: "view/toggle-window",
           label: "Toogle window",
           accelerator: "Ctrl + Tab",
           click: (menuItem, browserWindow, event) =>

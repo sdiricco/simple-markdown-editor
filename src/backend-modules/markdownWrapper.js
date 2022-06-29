@@ -1,18 +1,16 @@
 import * as markdown from "./markdown";
 
-export function parse(data = { content: null, path: null }) {
+export function parse(data = { path: null, value: null }) {
   const result = {
     error: false,
     errorMessage: "",
     data: {
-      content: null,
+      value: null,
     },
   };
   try {
     console.log("exec markdown.parse()");
-    console.log(data);
-    result.data.content = markdown.parse(data);
-    console.log("result parse", result.data.content);
+    result.data.value = markdown.parse(data);
   } catch (e) {
     console.log(e.message);
     result.error = true;

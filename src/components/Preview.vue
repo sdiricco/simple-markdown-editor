@@ -1,18 +1,13 @@
 <template>
   <div class="m-wrapper">
-    <div
-      class="m-container markdown-body"
-      :style="{ height: height }"
-      v-html="getBuiltFile.html"
-    ></div>
+    <div class="m-container markdown-body" :style="{ height: height }" v-html="getPreviewValue"></div>
 
-    <Spinner message="Building.." :enable="getMachineState.isBuildingFile" />
+    <Spinner message="Building.." :enable="getIsLoading" />
   </div>
 </template>
 
 <script>
 import { mapGetters, mapActions } from "vuex";
-import * as electronWrapper from "../services/electronWrapper"
 import Spinner from "./Spinner.vue";
 export default {
   name: "Preview",
@@ -27,56 +22,19 @@ export default {
   },
   computed: {
     ...mapGetters({
-      getInitialFile: "main/getInitialFile",
-      getMachineState: "main/getMachineState",
-      getEditedFile: "main/getEditedFile",
-      getBuiltFile: "main/getBuiltFile",
-      getOpenNewFile: "main/getOpenNewFile",
+      getPreviewValue: "preview/getValue",
+      getIsSync: "preview/getIsSync",
+      getIsLoading: "markdown/getIsLoading"
     }),
-    getShouldStartTheBuild() {
-      return this.getEditedFile.content !== this.getBuiltFile.content;
-    },
-    getFilePath() {
-      return this.getInitialFile.path;
-    },
   },
   methods: {
     ...mapActions({
-      buildFile: "main/buildFile",
+      markdownParse: "markdown/parse",
     }),
   },
-  watch: {
-    getOpenNewFile: async function (isNewFile) {
-      if (isNewFile) {
-        try {
-          await this.buildFile({
-            content: this.getEditedFile.content,
-            path: this.getFilePath,
-          });
-        } catch (e) {
-          await electronWrapper.showErrorBox(
-            `Error during building the app: ${
-              e.message
-            }\n\n${e.details ? "Details: " + e.details : ""}`
-          );
-        }
-      }
-    },
-  },
   async mounted() {
-    if (this.getShouldStartTheBuild) {
-      try {
-        await this.buildFile({
-          content: this.getEditedFile.content,
-          path: this.getFilePath,
-        });
-      } catch (e) {
-        await electronWrapper.showErrorBox(
-          `Error during building the app: ${e.message}\n\n${
-            e.details ? "Details: " + e.details : ""
-          }`
-        );
-      }
+    if (!this.getIsSync) {
+      await this.markdownParse();
     }
   },
 };

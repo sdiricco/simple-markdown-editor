@@ -37,13 +37,18 @@ export default {
   },
   computed: {
     ...mapGetters({
-      getEditedFile: "main/getEditedFile",
-      getOpenNewFile: "main/getOpenNewFile",
+      getEditorValue: 'editor/getValue',
+      getReload: 'editor/getReload'
     }),
+  },
+  watch: {
+    getReload(){
+      this.cm.setValue(this.getEditorValue);
+    }
   },
   methods: {
     ...mapActions({
-      setFileContent: "main/setFileContent",
+      setEditorValue: 'editor/setValue'
     }),
     destroy() {
       if (this.cm) {
@@ -54,7 +59,7 @@ export default {
       }
     },
     onChange() {
-      this.setFileContent({ content: this.cm.getValue() });
+      this.setEditorValue(this.cm.getValue());
     },
     init() {
       this.cm = CodeMirror.fromTextArea(document.getElementById("editor"), {
@@ -68,16 +73,8 @@ export default {
         autofocus: true,
       });
       this.cm.setSize("100%", this.height);
-      this.cm.setValue(this.getEditedFile.content);
+      this.cm.setValue(this.getEditorValue);
       this.cm.on("change", this.onChange);
-    },
-  },
-  watch: {
-    getOpenNewFile: function (isNewFile) {
-      if (isNewFile) {
-        console.log(isNewFile);
-        this.cm.setValue(this.getEditedFile.content);
-      }
     },
   },
   mounted() {

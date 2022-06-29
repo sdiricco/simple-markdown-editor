@@ -49,7 +49,7 @@ export async function reanderReady() {
 }
 
 
-export async function markdownParse(data = {content: null, path: null}) {
+export async function markdownParse(data = {path: null, value: null}) {
   const response = await ipcRenderer.invoke("markdown/parse", data)
   if (response.error) {
     throw new ElectronError(response.errorMessage)
