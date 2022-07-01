@@ -69,7 +69,7 @@ const actions = {
 
 
   //On Drop files
-  async onDropFiles({ dispatch }, data = { files: [] }) {
+  async onDropFiles({ dispatch, getters }, data = { files: [] }) {
     try {
       if (getters.getFileHasChanged) {
         const { canceled } = await electronWrapper.showMessageQuestion(

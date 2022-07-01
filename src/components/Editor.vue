@@ -71,6 +71,7 @@ export default {
         inputStyle: "contenteditable",
         screenReaderLabel: "screen reader label",
         autofocus: true,
+        dragDrop: false,
       });
       this.cm.setSize("100%", this.height);
       this.cm.setValue(this.getEditorValue);
