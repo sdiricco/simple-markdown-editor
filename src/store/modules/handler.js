@@ -71,6 +71,14 @@ const actions = {
   //On Drop files
   async onDropFiles({ dispatch }, data = { files: [] }) {
     try {
+      if (getters.getFileHasChanged) {
+        const { canceled } = await electronWrapper.showMessageQuestion(
+          "The file has changed. Are you sure you want to open a new file without saving?"
+        );
+        if (canceled) {
+          return;
+        }
+      }
       const filePaths = Object.values(data.files).map((f) => f.path);
       console.log("files", filePaths);
       await validation.validateFiles(filePaths);

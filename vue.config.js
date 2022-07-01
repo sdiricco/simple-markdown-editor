@@ -18,6 +18,7 @@ module.exports = {
       nodeIntegration: true,
       builderOptions: {
         "productName": 'Markwriter',
+        "copyright": "Copyright © 2022 Simone Di Ricco",
         "linux": {
           "target": ["AppImage"]
         },

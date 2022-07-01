@@ -25,7 +25,7 @@
         >
       </v-tabs>
       <div
-        class="m-container"
+        class="m-container" 
         @drop="drop"
       >
         <v-scroll-x-transition hide-on-leave>
@@ -34,6 +34,7 @@
         <v-scroll-x-transition hide-on-leave>
           <Preview v-if="getCurrentTab === getTabs.preview" />
         </v-scroll-x-transition>
+        <v-overlay :value="overlay"></v-overlay>
       </div>
       <Settings v-model="dialogSettings" />
     </v-main>
@@ -56,6 +57,7 @@ export default {
   data() {
     return {
       dialogSettings: false,
+      overlay: false,
     };
   },
   computed: {
@@ -93,7 +95,7 @@ export default {
       onMenuSave: 'handler/onMenuSave',
       setCurrentTab: 'main/setCurrentTab',
       toggleView: "main/toggleView",
-      setTitle: "main/setTitle"
+      setTitle: "[main/setTitle"
     }),
     async drop(evt) {
       evt.preventDefault();
@@ -106,7 +108,7 @@ export default {
     this.$vuetify.theme.dark = true;
     ipcRenderer.on('menu/file/open', this.onMenuOpen)
     ipcRenderer.on('menu/file/save', this.onMenuSave)
-    ipcRenderer.on('manu/file/saveas', this.onMenuSaveAs)
+    ipcRenderer.on('menu/file/saveas', this.onMenuSaveAs)
     ipcRenderer.on('menu/file/preferences', async()=> {
       this.dialogSettings = true;
     })

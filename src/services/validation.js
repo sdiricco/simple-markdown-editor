@@ -67,7 +67,7 @@ export async function validateFiles(
     });
   }
   for (const p of filePaths) {
-    const validPath = await nodeApi.exsistPath(p);
+    const validPath = ['.md', '.markdown', '.MD'].includes(path.extname(p));
     if (!validPath) {
       throw new ValidationError(`${p} is not a valid path`);
     }

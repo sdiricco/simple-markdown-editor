@@ -27,14 +27,21 @@ export default {
       getIsLoading: "markdown/getIsLoading"
     }),
   },
+  watch:{
+    getIsSync(sync){
+      if (!sync) {
+        this.markdownParse();
+      }
+    }
+  },
   methods: {
     ...mapActions({
       markdownParse: "markdown/parse",
     }),
   },
-  async mounted() {
+  mounted() {
     if (!this.getIsSync) {
-      await this.markdownParse();
+      this.markdownParse();
     }
   },
 };

@@ -1,6 +1,6 @@
 import EventEmitter from "eventemitter3"
 import { BrowserWindow, } from "electron";
-
+import * as path from "path"
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 
 export class WindowWrapper extends EventEmitter {
@@ -39,6 +39,7 @@ export class WindowWrapper extends EventEmitter {
       height: 600,
       minWidth: 600,
       minHeight: 400,
+      icon: path.join(__dirname, 'favicon.svg'),
       webPreferences: {
         nodeIntegration: this.electronNodeIntegration, 
         contextIsolation: !this.electronNodeIntegration,
