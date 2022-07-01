@@ -5,10 +5,12 @@ const state = {
     editor: "tab-editor",
     preview: "tab-preview",
   },
+  dropZone: false,
   currentTab: "tab-editor",
 };
 
 const getters = {
+  getDropZone: (state) => state.dropZone,
   getCurrentTab: (state) => state.currentTab,
   getTabs: (state) => state.tabs,
   getTitle: (_state, _getters, _rootState, rootGetters) => {
@@ -30,10 +32,19 @@ const actions = {
   setCurrentTab({ commit }, value) {
     commit("setCurrentTab", value);
   },
+  disableDropZone({commit}){
+    commit("setDropZone", false)
+  },
+  enableDropZoneOnDrag({commit}){
+    document.body.addEventListener('dragenter', ()=>{
+      commit("setDropZone", true)
+    })
+  }
 };
 
 const mutations = {
   setCurrentTab: (state, value) => (state.currentTab = value),
+  setDropZone: (state, value) => (state.dropZone = value)
 };
 
 export default {

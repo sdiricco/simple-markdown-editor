@@ -17,7 +17,20 @@
         <v-scroll-x-transition hide-on-leave>
           <Preview v-if="getCurrentTab === getTabs.preview" />
         </v-scroll-x-transition>
-        <div v-show="overlay || dropZone" @dragenter="onDragEnter" @dragleave="onDragLeave" @drop="onDrop"  class="test">Drop Elem <v-icon>mdi-plus</v-icon></div>
+        <div
+          v-show="getDropZone"
+          @dragleave.prevent.self.stop="onDragLeave"
+          @drop.prevent.self.stop="drop"
+          @dragover.prevent
+          class="test"
+        >
+          <div>
+            <h1>Drop file</h1>
+          </div>
+          <div>
+            <v-icon x-large>mdi-language-markdown-outline</v-icon>
+          </div>
+        </div>
       </div>
       <Settings v-model="dialogSettings" />
     </v-main>
@@ -40,8 +53,6 @@ export default {
   data() {
     return {
       dialogSettings: false,
-      overlay: false,
-      dropZone: false
     };
   },
   computed: {
@@ -52,6 +63,7 @@ export default {
       getCurrentTab: "main/getCurrentTab",
       getTabs: "main/getTabs",
       getTitle: "main/getTitle",
+      getDropZone: "main/getDropZone",
     }),
     tab: {
       get() {
@@ -78,42 +90,23 @@ export default {
       onMenuSave: "handler/onMenuSave",
       setCurrentTab: "main/setCurrentTab",
       toggleView: "main/toggleView",
-      setTitle: "[main/setTitle",
+      setTitle: "main/setTitle",
+      enableDropZoneOnDrag: "main/enableDropZoneOnDrag",
+      disableDropZone: "main/disableDropZone",
     }),
-    onDragEnter(evt) {
-      this.dropZone = true;
-      console.log("dragenter2", evt);
+    onDragLeave() {
+      console.log("drag leave");
+      this.disableDropZone();
     },
-    onDragLeave(evt) {
-      this.dropZone = false;
-      console.log("dragleave2", evt);
-    },
-    onDragOver(evt){
-      console.log("dragover2", evt);
-    },
-    async onDrop(evt) {
-      this.dropZone = false;
-      console.log("drop2", evt);
+    async drop(evt) {
+      console.log("drop");
+      this.disableDropZone();
       const files = evt.dataTransfer.files;
       await this.onDropFiles({ files: files });
     },
   },
   async mounted() {
-    ['dragenter', 'dragover', 'dragstart', 'dragstop', 'dragleave', 'drop'].forEach(e=> document.body.addEventListener(e, (evt)=>{
-      console.log("event", e);
-      evt.preventDefault()
-      evt.stopPropagation()
-
-      if (e === 'dragenter' && this.dropZone === false) {
-        this.overlay = true
-      }
-      else if(e === 'dragleave' && this.dropZone === true){
-        this.overlay = false
-      }
-      else if (e === 'drop' && this.dropZone === false) {
-        this.overlay = false
-      }
-    }))
+    this.enableDropZoneOnDrag();
     this.$vuetify.theme.dark = true;
     ipcRenderer.on("menu/file/open", this.onMenuOpen);
     ipcRenderer.on("menu/file/save", this.onMenuSave);
@@ -158,11 +151,11 @@ export default {
   transition: none;
 }
 
-.background-color{
+.background-color {
   background-color: black !important;
 }
 
-.test{
+.test {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -174,5 +167,6 @@ export default {
   height: 100vh;
   background-color: black;
   opacity: 0.3;
+  flex-direction: column;
 }
 </style>
