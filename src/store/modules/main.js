@@ -1,4 +1,5 @@
 const namespaced = true;
+import * as _ from "lodash"
 
 const state = {
   tabs: {
@@ -22,6 +23,10 @@ const getters = {
   },
 };
 
+const throttledDropZone = _.throttle((value)=>{
+  mutations.setDropZone(state, value)
+}, 200, {leading:true});
+
 const actions = {
   toggleView({ commit, getters }) {
     const tabs = Object.values(getters.getTabs);
@@ -32,14 +37,18 @@ const actions = {
   setCurrentTab({ commit }, value) {
     commit("setCurrentTab", value);
   },
-  disableDropZone({commit}){
-    commit("setDropZone", false)
+  async disableDropZone(){
+    throttledDropZone(false);
+  },
+  async enableDropZone(){
+    throttledDropZone(true);
   },
   enableDropZoneOnDrag({commit}){
     document.body.addEventListener('dragenter', ()=>{
       commit("setDropZone", true)
     })
-  }
+  },
+
 };
 
 const mutations = {

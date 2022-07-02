@@ -17,20 +17,22 @@
         <v-scroll-x-transition hide-on-leave>
           <Preview v-if="getCurrentTab === getTabs.preview" />
         </v-scroll-x-transition>
-        <div
-          v-show="getDropZone"
-          @dragleave.prevent.self.stop="onDragLeave"
-          @drop.prevent.self.stop="drop"
-          @dragover.prevent
-          class="test"
-        >
-          <div>
-            <h1>Drop file</h1>
+        <v-fade-transition origin="center center 0">
+          <div
+            v-show="getDropZone"
+            @dragleave.prevent.self.stop="onDragLeave"
+            @drop.prevent="drop"
+            @dragover.prevent="onDragOver"
+            class="test"
+          >
+            <div>
+              <h1>Drop file</h1>
+            </div>
+            <div>
+              <v-icon x-large>mdi-language-markdown-outline</v-icon>
+            </div>
           </div>
-          <div>
-            <v-icon x-large>mdi-language-markdown-outline</v-icon>
-          </div>
-        </div>
+        </v-fade-transition>
       </div>
       <Settings v-model="dialogSettings" />
     </v-main>
@@ -93,10 +95,14 @@ export default {
       setTitle: "main/setTitle",
       enableDropZoneOnDrag: "main/enableDropZoneOnDrag",
       disableDropZone: "main/disableDropZone",
+      enableDropZone: "main/enableDropZone",
     }),
     onDragLeave() {
       console.log("drag leave");
       this.disableDropZone();
+    },
+    onDragOver() {
+      this.enableDropZone();
     },
     async drop(evt) {
       console.log("drop");
