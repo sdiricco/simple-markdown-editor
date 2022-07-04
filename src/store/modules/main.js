@@ -8,9 +8,13 @@ const state = {
   },
   dropZone: false,
   currentTab: "tab-editor",
+  settings:{
+    dialog: false
+  }
 };
 
 const getters = {
+  getSettings: (state) => state.settings,
   getDropZone: (state) => state.dropZone,
   getCurrentTab: (state) => state.currentTab,
   getTabs: (state) => state.tabs,
@@ -48,12 +52,22 @@ const actions = {
       commit("setDropZone", true)
     })
   },
+  setSettings({commit}, settings = {}){
+    commit("setSettings", settings)
+  },
+  showSettings({commit}){
+    commit("setSettings", {dialog: true})
+  },
+  closeSettings({commit}){
+    commit("setSettings", {dialog: false})
+  }
 
 };
 
 const mutations = {
   setCurrentTab: (state, value) => (state.currentTab = value),
-  setDropZone: (state, value) => (state.dropZone = value)
+  setDropZone: (state, value) => (state.dropZone = value),
+  setSettings: (state, settings) => (state.settings = {...state.settings, ...settings})
 };
 
 export default {

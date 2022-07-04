@@ -2,6 +2,8 @@ import * as electronApi from "../../services/electronApi";
 import * as electronWrapper from "../../services/electronWrapper";
 import * as validation from "../../services/validation";
 import path from "path";
+// import { ipcRenderer } from "electron";
+
 
 const namespaced = true;
 
@@ -41,10 +43,10 @@ const actions = {
       //1 - if user click on cancel, siply return
       //2 - if user click on ok, continue choosing file from open dialog
       if (getters.getFileHasChanged) {
-        const { canceled } = await electronWrapper.showMessageQuestion(
+        const { response } = await electronWrapper.showMessageQuestion(
           "The file has changed. Are you sure you want to open a new file without saving?"
         );
-        if (canceled) {
+        if (response.cancel) {
           return;
         }
       }
@@ -72,10 +74,10 @@ const actions = {
   async onDropFiles({ dispatch, getters }, data = { files: [] }) {
     try {
       if (getters.getFileHasChanged) {
-        const { canceled } = await electronWrapper.showMessageQuestion(
+        const { response } = await electronWrapper.showMessageQuestion(
           "The file has changed. Are you sure you want to open a new file without saving?"
         );
-        if (canceled) {
+        if (response.cancel) {
           return;
         }
       }
@@ -95,6 +97,7 @@ const actions = {
 
   async onInit({ dispatch }) {
     try {
+      dispatch('attachElectronListener')
 
       //get the app args
       const { args } = await electronApi.reanderReady();
@@ -123,7 +126,26 @@ const actions = {
     await dispatch("editor/setValue", value, { root: true });
     await dispatch("editor/reload", null, { root: true });
   },
+
+  async onMenuPreferences({dispatch}){
+    dispatch("main/showSettings", null, {root: true})
+  },
+
+  async onToggleView({dispatch}){
+    dispatch("main/toggleView", null, {root: true})
+  },
+
+  attachElectronListener({dispatch}){
+    electronApi.listeners.onClickOpenFile = () => dispatch("onMenuOpen")
+    electronApi.listeners.onClickSaveFile = () => dispatch("onMenuSave")
+    electronApi.listeners.onClickSaveAsFile = ()=> dispatch("onMenuSaveAs")
+    electronApi.listeners.onClickPreferences = () => dispatch("onMenuPreferences")
+    electronApi.listeners.onClickToggleView = ()=> dispatch("onToggleView")
+  }
 };
+
+
+
 
 export default {
   namespaced,

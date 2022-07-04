@@ -18,45 +18,27 @@
           <Preview v-if="getCurrentTab === getTabs.preview" />
         </v-scroll-x-transition>
         <v-fade-transition origin="center center 0">
-          <div
-            v-show="getDropZone"
-            @dragleave.prevent.self.stop="onDragLeave"
-            @drop.prevent="drop"
-            @dragover.prevent="onDragOver"
-            class="test"
-          >
-            <div>
-              <h1>Drop file</h1>
-            </div>
-            <div>
-              <v-icon x-large>mdi-language-markdown-outline</v-icon>
-            </div>
-          </div>
+          <DropZone v-if="getDropZone" />
         </v-fade-transition>
       </div>
-      <Settings v-model="dialogSettings" />
+      <Settings :value="getSettings.dialog" @close="closeSettings"/>
     </v-main>
   </v-app>
 </template>
 
 <script>
-import { ipcRenderer } from "electron";
 import { mapActions, mapGetters } from "vuex";
 import Editor from "./components/Editor.vue";
 import Preview from "./components/Preview.vue";
+import DropZone from "./components/DropZone.vue";
 import * as electronWrapper from "./services/electronWrapper";
 import Settings from "./components/Settings.vue";
 import * as electronApi from "./services/electronApi";
 
 export default {
   name: "App",
-  components: { Editor, Preview, Settings },
+  components: { Editor, Preview, Settings, DropZone },
 
-  data() {
-    return {
-      dialogSettings: false,
-    };
-  },
   computed: {
     ...mapGetters({
       getFileName: "file/getName",
@@ -66,6 +48,7 @@ export default {
       getTabs: "main/getTabs",
       getTitle: "main/getTitle",
       getDropZone: "main/getDropZone",
+      getSettings: "main/getSettings",
     }),
     tab: {
       get() {
@@ -94,33 +77,12 @@ export default {
       toggleView: "main/toggleView",
       setTitle: "main/setTitle",
       enableDropZoneOnDrag: "main/enableDropZoneOnDrag",
-      disableDropZone: "main/disableDropZone",
-      enableDropZone: "main/enableDropZone",
+      closeSettings: "main/closeSettings"
     }),
-    onDragLeave() {
-      console.log("drag leave");
-      this.disableDropZone();
-    },
-    onDragOver() {
-      this.enableDropZone();
-    },
-    async drop(evt) {
-      console.log("drop");
-      this.disableDropZone();
-      const files = evt.dataTransfer.files;
-      await this.onDropFiles({ files: files });
-    },
   },
   async mounted() {
     this.enableDropZoneOnDrag();
     this.$vuetify.theme.dark = true;
-    ipcRenderer.on("menu/file/open", this.onMenuOpen);
-    ipcRenderer.on("menu/file/save", this.onMenuSave);
-    ipcRenderer.on("menu/file/saveas", this.onMenuSaveAs);
-    ipcRenderer.on("menu/file/preferences", async () => {
-      this.dialogSettings = true;
-    });
-    ipcRenderer.on("menu/view/toggle-window", this.toggleView);
 
     try {
       await this.onInit();
@@ -161,18 +123,5 @@ export default {
   background-color: black !important;
 }
 
-.test {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: black;
-  opacity: 0.3;
-  flex-direction: column;
-}
+
 </style>

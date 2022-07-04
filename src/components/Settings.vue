@@ -59,8 +59,11 @@ export default {
       get() {
         return this.value;
       },
-      set(val) {
-        this.$emit("change", val);
+      set(value) {
+        this.$emit("change", value);
+        if (!value) {
+          this.$emit("close")
+        }
       },
     },
   },
