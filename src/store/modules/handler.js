@@ -13,35 +13,39 @@ const getters = {
 };
 
 const actions = {
+
   /* On Click: Menu > File > Save */
   async onMenuSave({ dispatch, rootGetters }) {
-    const filePath = rootGetters["file/getPath"];
-    const editorValue = rootGetters["editor/getValue"];
-
-    if (filePath === "") {
-      await dispatch("onMenuSaveAs");
-      return;
+    try {
+      const filePath = rootGetters["file/getPath"];
+      const editorValue = rootGetters["editor/getValue"];
+      if (filePath === "") {
+        await dispatch("onMenuSaveAs");
+        return;
+      }
+      await dispatch("file/save", { filePath: filePath, value: editorValue }, { root: true }); 
+    } catch (error) {
+      await dispatch('error/electron', {message: 'Error during saving file.', error: error}, {root:true})
     }
-    await dispatch("file/save", { filePath: filePath, value: editorValue }, { root: true });
   },
 
   /* On Click: Menu > File > Save as */
   async onMenuSaveAs({ dispatch, rootGetters }) {
-    const editorValue = rootGetters["editor/getValue"];
-
-    const { canceled, filePath } = await electronWrapper.showSaveDialog();
-    if (canceled) {
-      return;
+    try {
+      const { canceled, filePath } = await electronWrapper.showSaveDialog();
+      if (canceled) {
+        return;
+      }
+      const editorValue = rootGetters["editor/getValue"];
+      await dispatch("file/save", { filePath: filePath, value: editorValue }, { root: true });
+    } catch (error) {
+      await dispatch('error/electron', {message: 'Error during saving file.', error: error}, {root:true})
     }
-    await dispatch("file/save", { filePath: filePath, value: editorValue }, { root: true });
   },
 
   //On Click: Menu > File > Open
   async onMenuOpen({ dispatch, getters }) {
     try {
-      //if file has changed, show message info.
-      //1 - if user click on cancel, siply return
-      //2 - if user click on ok, continue choosing file from open dialog
       if (getters.getFileHasChanged) {
         const { response } = await electronWrapper.showMessageQuestion(
           "The file has changed. Are you sure you want to open a new file without saving?"
@@ -50,25 +54,16 @@ const actions = {
           return;
         }
       }
-      //chose a file from open dialog
-      //1 - if canceled, simply return
-      //2 - if choosing a file, return the path
       const { canceled, filePath } = await electronWrapper.showOpenDialog();
       if (canceled) {
         return;
       }
-
       await validation.validateFile(filePath);
-
       await dispatch('loadFile', {filePath: filePath})
-    } catch (e) {
-      await electronWrapper.showErrorBox(
-        `Error during opening file: ${e.message}\n\n${e.details ? "Details: " + e.details : ""}`
-      );
+    } catch (error) {
+      await dispatch('error/electron', {message: 'Error during opening file.', error: error}, {root:true})
     }
   },
-
-
 
   //On Drop files
   async onDropFiles({ dispatch, getters }, data = { files: [] }) {
@@ -84,39 +79,28 @@ const actions = {
       const filePaths = Object.values(data.files).map((f) => f.path);
       console.log("files", filePaths);
       await validation.validateFiles(filePaths);
-
       await dispatch('loadFile', {filePath: filePaths[0]})
-    } catch (e) {
-      console.log(e.message);
-      console.log(e.details);
-      await electronWrapper.showErrorBox(
-        `Error during the drop files: ${e.message}\n\n${e.details ? "Details: " + e.details : ""}`
-      );
+    } catch (error) {
+      await dispatch('error/electron', {message: 'Error during the drop files.', error: error}, {root:true})
     }
   },
 
+  //During the initialization
   async onInit({ dispatch }) {
     try {
       dispatch('attachElectronListener')
-
       //get the app args
       const { args } = await electronApi.reanderReady();
-
       //filter only md files
       const filePaths = args.filter((a) => path.extname(a) === ".md");
-
       //If there are not files, simply returns
       if (!filePaths.length) {
         console.log("App launched without any files");
         return;
       }
-
       await dispatch('loadFile', {filePath: filePaths[0]})
-
-    } catch (e) {
-      console.log(e.message);
-      console.log(e.details);
-      throw e;
+    } catch (error) {
+      await dispatch('error/electron', {message: 'Error during the initialization phase.', error: error}, {root:true})
     }
   },
 

@@ -1,15 +1,24 @@
 <template>
   <v-app>
     <v-main>
-      <v-tabs class="tabs-custom-style" v-model="tab" hide-slider center-active height="40px" dark>
-        <v-tab active-class="my-custom-active-class" class="my-custom-class" :href="`#${getTabs.editor}`"
-          ><v-icon color="brown" small class="pr-1">mdi-language-markdown-outline</v-icon>{{ getFileName }}
-          <v-icon color="#fff" class="pl-1" x-small v-if="getFileHasChanged">mdi-circle</v-icon></v-tab
-        >
-        <v-tab :href="`#${getTabs.preview}`" active-class="my-custom-active-class" class="my-custom-class">
-          <v-icon color="#ccc" small class="pr-1">mdi-text-box-search-outline</v-icon>{{ getFileName }}</v-tab
-        >
+      <!-- Tabs -->
+      <v-tabs v-model="tab" hide-slider center-active height="40px" dark>
+      
+        <!-- Tab Editor -->
+        <v-tab active-class="tab-active" class="tab" :href="`#${getTabs.editor}`">
+          <v-icon color="brown" small class="pr-1">mdi-language-markdown-outline</v-icon>
+          {{ getFileName }}
+          <v-icon color="#fff" class="pl-1" x-small v-if="getFileHasChanged">mdi-circle</v-icon>
+        </v-tab>
+
+        <!-- Tab Preview -->
+        <v-tab :href="`#${getTabs.preview}`" active-class="tab-active" class="tab">
+          <v-icon color="#ccc" small class="pr-1">mdi-text-box-search-outline</v-icon>
+          {{ getFileName }}
+        </v-tab>
       </v-tabs>
+
+      <!-- Content -->
       <div class="m-container">
         <v-scroll-x-transition hide-on-leave>
           <Editor v-if="getCurrentTab === getTabs.editor" />
@@ -21,7 +30,9 @@
           <DropZone v-if="getDropZone" />
         </v-fade-transition>
       </div>
-      <Settings :value="getSettings.dialog" @close="closeSettings"/>
+
+      <!-- Settings -->
+      <Settings :value="getSettings.dialog" @close="closeSettings" />
     </v-main>
   </v-app>
 </template>
@@ -77,7 +88,7 @@ export default {
       toggleView: "main/toggleView",
       setTitle: "main/setTitle",
       enableDropZoneOnDrag: "main/enableDropZoneOnDrag",
-      closeSettings: "main/closeSettings"
+      closeSettings: "main/closeSettings",
     }),
   },
   async mounted() {
@@ -102,19 +113,19 @@ export default {
   background-color: var(--v-background-base);
 }
 
-.my-custom-active-class {
+.tab-active {
   background-color: var(--v-background-base);
   border-radius: 2px 2px 0px 0px;
 }
 
-.my-custom-class {
+.tab {
   margin-top: 4px;
   border-radius: 4px 4px 0px 0px;
   color: #fff;
   text-transform: none;
 }
 
-.my-custom-class:before {
+.tab:before {
   background-color: transparent;
   transition: none;
 }
@@ -122,6 +133,4 @@ export default {
 .background-color {
   background-color: black !important;
 }
-
-
 </style>

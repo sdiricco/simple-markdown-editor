@@ -2,6 +2,7 @@ import { marked } from "marked";
 import hljs from "highlight.js";
 import { nativeImage } from "electron";
 import path from "path";
+import markdownToc from 'markdown-toc-unlazy'
 
 let basePath = "";
 
@@ -14,6 +15,17 @@ const renderer = {
   link(href = "", title = "", text = "") {
     return `<a href="${href}" alt="${text}" target="_blank">${text}</a>`;
   },
+  heading(text, level) {
+    const escapedText = text.toLowerCase().replace(/[^\w]+/g, '-');
+
+    return `
+            <h${level}>
+              <a name="${escapedText}" class="anchor" href="#${escapedText}">
+                <span class="header-link"></span>
+              </a>
+              ${text}
+            </h${level}>`;
+  }
 };
 
 marked.setOptions({
@@ -44,6 +56,9 @@ export function parse(data = {value: null, path: null}) {
   } catch (e) {
     throw(e)
   }
+}
 
+export function toc(data){
+  return markdownToc(data).content
 }
 

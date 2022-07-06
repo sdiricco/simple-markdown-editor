@@ -6,11 +6,13 @@ export function parse(data = { path: null, value: null }) {
     errorMessage: "",
     data: {
       value: null,
+      toc: null
     },
   };
   try {
     console.log("exec markdown.parse()");
     result.data.value = markdown.parse(data);
+    result.data.toc = markdown.toc(data.value);
   } catch (e) {
     console.log(e.message);
     result.error = true;

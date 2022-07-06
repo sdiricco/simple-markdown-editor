@@ -26,8 +26,11 @@
     "highlight.js": "^11.5.1",
     "less-loader": "^10.2.0",
     "lodash": "^4.17.21",
+    "markdown-toc": "^1.2.0",
+    "markdown-toc-unlazy": "^1.0.1",
     "marked": "^4.0.16",
     "ramda": "^0.28.0",
+    "remarkable": "^2.0.1",
     "vue": "^2.6.11",
     "vuetify": "^2.4.0",
     "vuex": "^3.6.2"

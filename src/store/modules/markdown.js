@@ -16,7 +16,8 @@ const actions = {
       commit("setLoading", true)
       const filePath = rootGetters['file/getPath'];
       const editorValue = rootGetters['editor/getValue'];
-      const {value} = await markdownParse({path: filePath, value: editorValue})
+      const {value, toc} = await markdownParse({path: filePath, value: editorValue})
+      console.log("toc", toc)
       await dispatch('preview/setValue', value, {root:true})
       await dispatch('preview/setValueRaw', editorValue, {root:true})
       commit("setLoading", false)

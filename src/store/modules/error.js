@@ -4,7 +4,7 @@ const namespaced = true;
 
 const state = {
   value: {
-    prepend: "",
+    message: "",
     error: {
       message: "",
       code: "",
@@ -14,16 +14,16 @@ const state = {
   },
 };
 
-const getter ={
+const getters ={
   getValue: (state) => state.value
 }
 
 const actions = {
-  async electron({ commit }, { prepend = "", error = { message: "", code: null, details: "", name: "" } }) {
+  async electron({ commit }, { message = "", error = { message: null, code: null, details: null, name: null } }) {
     await electronWrapper.showErrorBox(
-      `${prepend ? prepend + " " : ""} ${error.message}\n\n${error.details ? "Details: " + error.details : ""}`
+      `${message ? message : ""}${error.message ? "\nDetails: " + error.message : ""}`
     );
-    commit("setValue", {prepend: prepend, error: error});
+    commit("setValue", {message: message, error: error});
   },
 };
 
