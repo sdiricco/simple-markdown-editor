@@ -3,7 +3,6 @@
     <v-main>
       <!-- Tabs -->
       <v-tabs v-model="tab" hide-slider center-active height="40px" dark>
-      
         <!-- Tab Editor -->
         <v-tab active-class="tab-active" class="tab" :href="`#${getTabs.editor}`">
           <v-icon color="brown" small class="pr-1">mdi-language-markdown-outline</v-icon>
@@ -45,6 +44,7 @@ import DropZone from "./components/DropZone.vue";
 import * as electronWrapper from "./services/electronWrapper";
 import Settings from "./components/Settings.vue";
 import * as electronApi from "./services/electronApi";
+import { shell } from "electron";
 
 export default {
   name: "App",
@@ -90,8 +90,29 @@ export default {
       enableDropZoneOnDrag: "main/enableDropZoneOnDrag",
       closeSettings: "main/closeSettings",
     }),
+    openExternal() {
+      let links = document.getElementsByTagName("a");
+      let a, i = 0;
+      while (links[i]) {
+        a = links[i];
+        //If <a target="_external">, so open using shell.
+        if (a.getAttribute("target") == "_external") {
+          a.addEventListener("click", (ev) => {
+            ev.preventDefault();
+            let url = a.href;
+            console.log(url);
+            shell.openExternal(url);
+            a.setAttribute("href", "#");
+            return false;
+          });
+        }
+        console.log(a, a.getAttribute("external"));
+        i++;
+      }
+    },
   },
   async mounted() {
+    // this.openExternal()
     this.enableDropZoneOnDrag();
     this.$vuetify.theme.dark = true;
 

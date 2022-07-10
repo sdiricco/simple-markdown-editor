@@ -20,6 +20,8 @@ const actions = {
       console.log("toc", toc)
       await dispatch('preview/setValue', value, {root:true})
       await dispatch('preview/setValueRaw', editorValue, {root:true})
+      await dispatch('preview/setToc', toc.html, {root:true})
+      await dispatch('preview/setTocRaw', toc.markdown, {root:true})
       commit("setLoading", false)
     } catch (e) {
       commit("setLoading", false)

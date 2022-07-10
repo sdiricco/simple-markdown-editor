@@ -4,7 +4,18 @@ import { nativeImage } from "electron";
 import path from "path";
 import markdownToc from 'markdown-toc-unlazy'
 
+function isUrl(string) {
+  let url;
+  try {
+    url = new URL(string);
+  } catch (_) {
+    return false;  
+  }
+  return url.protocol === "http:" || url.protocol === "https:";
+}
+
 let basePath = "";
+const headings = []
 
 const renderer = {
   image(href = "", title = "", text = "") {
@@ -13,18 +24,22 @@ const renderer = {
     return `<img src="${imageNative.toDataURL()}" alt="${text}">`;
   },
   link(href = "", title = "", text = "") {
-    return `<a href="${href}" alt="${text}" target="_blank">${text}</a>`;
+    return `<a href="${href}" alt="${text}" ${isUrl(href) ? "target='_blank'" : ''} >${text}</a>`;
   },
-  heading(text, level) {
-    const escapedText = text.toLowerCase().replace(/[^\w]+/g, '-');
-
-    return `
-            <h${level}>
-              <a name="${escapedText}" class="anchor" href="#${escapedText}">
-                <span class="header-link"></span>
-              </a>
-              ${text}
-            </h${level}>`;
+  heading(text, level){
+    const escapedText = text.toLowerCase().replace(/[^\w]+/g, '-')
+    const duplicateIndex = headings.map(({ text }) => text).indexOf(escapedText)
+    let duplicateText = undefined
+    if (duplicateIndex === -1) {
+      headings.push({
+        text: escapedText,
+        count: 0
+      })
+    } else {
+      headings[duplicateIndex].count++
+      duplicateText = `${escapedText}-${headings[duplicateIndex].count}`
+    }
+    return `<h${level} id="${duplicateText || escapedText}">${text}</h${level}>\n`
   }
 };
 
@@ -59,6 +74,13 @@ export function parse(data = {value: null, path: null}) {
 }
 
 export function toc(data){
-  return markdownToc(data).content
+  const result = markdownToc(data).content
+  const json = markdownToc(data).json
+  console.log("json", json);
+  return {
+    markdown: result,
+    json: json,
+    html: marked.parse(result)
+  }
 }
 

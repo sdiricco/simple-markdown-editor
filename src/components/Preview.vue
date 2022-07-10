@@ -1,6 +1,7 @@
 <template>
   <div class="m-wrapper">
     <div class="m-container markdown-body" :style="{ height: height }" v-html="getPreviewValue"></div>
+    <div class="toc" v-html="getToc"></div>
 
     <Spinner message="Building.." :enable="getIsLoading" />
   </div>
@@ -24,7 +25,8 @@ export default {
     ...mapGetters({
       getPreviewValue: "preview/getValue",
       getIsSync: "preview/getIsSync",
-      getIsLoading: "markdown/getIsLoading"
+      getIsLoading: "markdown/getIsLoading",
+      getToc: "preview/getToc"
     }),
   },
   watch:{
@@ -57,5 +59,16 @@ export default {
 }
 
 .m-wrapper {
+  display: flex;
 }
+
+.toc{
+  display: inline;
+  position: sticky;
+  top: 0px;
+  height: 100%;
+  width: 300px;
+  max-width: 300px;
+}
+
 </style>
