@@ -15,7 +15,7 @@ function isUrl(string) {
 }
 
 let basePath = "";
-const headings = []
+let headings = []
 
 const renderer = {
   image(href = "", title = "", text = "") {
@@ -39,7 +39,8 @@ const renderer = {
       headings[duplicateIndex].count++
       duplicateText = `${escapedText}-${headings[duplicateIndex].count}`
     }
-    return `<h${level} id="${duplicateText || escapedText}">${text}</h${level}>\n`
+    const id = `${duplicateText || escapedText}`
+    return `<h${level} name="${id}" id="${id}">${text}</h${level}>\n`
   }
 };
 
@@ -67,6 +68,7 @@ export function parse(data = {value: null, path: null}) {
     if (data.path && data.path !== '') {
       basePath = path.dirname(data.path)
     }
+    headings = [];
     return marked.parse(data.value);
   } catch (e) {
     throw(e)
@@ -74,13 +76,6 @@ export function parse(data = {value: null, path: null}) {
 }
 
 export function toc(data){
-  const result = markdownToc(data).content
-  const json = markdownToc(data).json
-  console.log("json", json);
-  return {
-    markdown: result,
-    json: json,
-    html: marked.parse(result)
-  }
+  return markdownToc(data).json
 }
 

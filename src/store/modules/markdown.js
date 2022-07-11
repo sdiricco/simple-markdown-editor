@@ -1,4 +1,4 @@
-import {markdownParse} from "../../services/electronApi";
+import {markdownParse, markdownToc} from "../../services/electronApi";
 
 const namespaced = true;
 
@@ -16,18 +16,21 @@ const actions = {
       commit("setLoading", true)
       const filePath = rootGetters['file/getPath'];
       const editorValue = rootGetters['editor/getValue'];
-      const {value, toc} = await markdownParse({path: filePath, value: editorValue})
-      console.log("toc", toc)
+      const {value} = await markdownParse({path: filePath, value: editorValue})
       await dispatch('preview/setValue', value, {root:true})
       await dispatch('preview/setValueRaw', editorValue, {root:true})
-      await dispatch('preview/setToc', toc.html, {root:true})
-      await dispatch('preview/setTocRaw', toc.markdown, {root:true})
+      await dispatch('generateToc')
       commit("setLoading", false)
     } catch (e) {
       commit("setLoading", false)
       throw(e)
     }
   },
+  async generateToc({dispatch, rootGetters}){
+    const editorValue = rootGetters['editor/getValue'];
+    const {value} = await markdownToc({value: editorValue})
+    await dispatch('preview/setToc', value, {root:true})
+  }
 };
 
 const mutations = {

@@ -10,7 +10,8 @@ const state = {
   currentTab: "tab-editor",
   settings:{
     dialog: false
-  }
+  },
+  locationHash: ''
 };
 
 const getters = {
@@ -25,6 +26,7 @@ const getters = {
     }
     return title;
   },
+  getLocationHash:(state) => state.locationHash
 };
 
 const throttledDropZone = _.throttle((value)=>{
@@ -60,14 +62,20 @@ const actions = {
   },
   closeSettings({commit}){
     commit("setSettings", {dialog: false})
-  }
-
+  },
+  watchLocationHash({commit}){
+    window.addEventListener('hashchange', () => {
+      console.log('The hash has changed!')
+      commit('setLocationHash', window.location.hash)
+    }, false);
+  },
 };
 
 const mutations = {
   setCurrentTab: (state, value) => (state.currentTab = value),
   setDropZone: (state, value) => (state.dropZone = value),
-  setSettings: (state, settings) => (state.settings = {...state.settings, ...settings})
+  setSettings: (state, settings) => (state.settings = {...state.settings, ...settings}),
+  setLocationHash: (state, value) => (state.locationHash = value)
 };
 
 export default {

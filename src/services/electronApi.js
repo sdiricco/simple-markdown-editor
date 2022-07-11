@@ -76,6 +76,14 @@ export async function markdownParse(data = { path: null, value: null }) {
   return response.data;
 }
 
+export async function markdownToc(data = {value: null }) {
+  const response = await ipcRenderer.invoke("markdown/toc", data);
+  if (response.error) {
+    throw new ElectronError(response.errorMessage);
+  }
+  return response.data;
+}
+
 export async function getAppArgs() {
   const response = await ipcRenderer.invoke("app/getargs");
   if (response.error) {

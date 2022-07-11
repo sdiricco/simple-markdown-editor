@@ -63,4 +63,8 @@ ipcMain.handle("markdown/parse", (_evt, data) => {
   return markdownWrapper.parse(data)
 });
 
+ipcMain.handle("markdown/toc", (_evt, data) => {
+  return markdownWrapper.toc(data)
+})
+
 

@@ -89,6 +89,7 @@ const actions = {
   async onInit({ dispatch }) {
     try {
       dispatch('attachElectronListener')
+      dispatch('main/watchLocationHash', null, {root:true})
       //get the app args
       const { args } = await electronApi.reanderReady();
       //filter only md files

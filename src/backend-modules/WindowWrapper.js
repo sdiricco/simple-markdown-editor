@@ -23,7 +23,8 @@ export class WindowWrapper extends EventEmitter {
     this.loadProdWindow();
   }
 
-  openExternalHandler(){
+  setExternalHandler(){
+    console.log("set external handler");
     this.instance.webContents.setWindowOpenHandler(({ url }) => {
       console.log("url", url);
       if (url.startsWith("http://localhost")) {
@@ -62,7 +63,7 @@ export class WindowWrapper extends EventEmitter {
     this.instance.maximize();
     this.instance.show();
     this.loadWindow();
-    this.openExternalHandler();
+    this.setExternalHandler();
   }
 
   send(channel, payload) {

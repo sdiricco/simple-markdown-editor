@@ -3,8 +3,7 @@ const namespaced = true;
 const state = {
   value: '',
   valueRaw: '',
-  toc: '',
-  tocRaw: ''
+  toc: [],
 };
 
 const getters = {
@@ -12,7 +11,6 @@ const getters = {
   getValueRaw: (state) => state.valueRaw,
   getIsSync: (state, _getters, _rootState, rootGetters) => rootGetters['editor/getValue'] === state.valueRaw,
   getToc: (state) => state.toc,
-  getTocRaw: (state) => state.tocRaw
 };
 
 const actions = {
@@ -24,17 +22,13 @@ const actions = {
   },
   setToc({ commit }, value) {
     commit("setToc", value);
-  },
-  setTocRaw({commit}, value){
-    commit("setTocRaw", value);
-  },
+  }
 };
 
 const mutations = {
   setValue: (state, value) => (state.value = value),
   setValueRaw: (state, value) => (state.valueRaw = value),
   setToc: (state, value) => (state.toc = value),
-  setTocRaw: (state, value) => (state.tocRaw = value)
 };
 
 export default {

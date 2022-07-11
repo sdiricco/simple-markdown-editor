@@ -1,8 +1,7 @@
 <template>
   <div class="m-wrapper">
-    <div class="m-container markdown-body" :style="{ height: height }" v-html="getPreviewValue"></div>
-    <div class="toc" v-html="getToc"></div>
-
+    <div class="m-container markdown-body" color="transparent" v-scroll.self="onScroll" :style="{ height: height }" v-html="getPreviewValue" id="myfid"></div>
+    <Toc class="toc thin-scroll" v-if="getPreviewValue"/>
     <Spinner message="Building.." :enable="getIsLoading" />
   </div>
 </template>
@@ -10,10 +9,13 @@
 <script>
 import { mapGetters, mapActions } from "vuex";
 import Spinner from "./Spinner.vue";
+import Toc from "./Toc.vue"
+
 export default {
   name: "Preview",
   components: {
     Spinner,
+    Toc
   },
   props: {
     height: {
@@ -26,7 +28,6 @@ export default {
       getPreviewValue: "preview/getValue",
       getIsSync: "preview/getIsSync",
       getIsLoading: "markdown/getIsLoading",
-      getToc: "preview/getToc"
     }),
   },
   watch:{
@@ -40,6 +41,9 @@ export default {
     ...mapActions({
       markdownParse: "markdown/parse",
     }),
+    onScroll(){
+      console.log(window.scrollY);
+    }
   },
   mounted() {
     if (!this.getIsSync) {
@@ -54,21 +58,22 @@ export default {
 @import "../styles/github-dark.css";
 .m-container {
   padding: 16px;
-  max-width: 900px;
-  margin: auto;
+  max-width: 600px;
+  /* margin: auto; */
 }
 
 .m-wrapper {
   display: flex;
+  justify-content: center;
 }
 
-.toc{
+.toc {
   display: inline;
   position: sticky;
-  top: 0px;
-  height: 100%;
-  width: 300px;
-  max-width: 300px;
+  top: 24px;
+  height: 80vh;
+  width: 200px;
+  max-width: 200px;
 }
 
 </style>
