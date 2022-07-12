@@ -8,9 +8,9 @@ A simple markdown editor
 
 ## Download
 
-[Download here](https://github.com/sdiricco/simple-markdown-editor/releases/tag/2.0.6) the latest version, v2.0.6.
+[Download here](https://github.com/sdiricco/simple-markdown-editor/releases/tag/2.0.7) the latest version, v2.0.7.
 
-Available for [Linux](https://github.com/sdiricco/simple-markdown-editor/releases/tag/2.0.6) and [Windows](https://github.com/sdiricco/simple-markdown-editor/releases/tag/2.0.6)
+Available for [Linux](https://github.com/sdiricco/simple-markdown-editor/releases/tag/2.0.7) and [Windows](https://github.com/sdiricco/simple-markdown-editor/releases/tag/2.0.7)
 
 
 ## Develope
