@@ -22,6 +22,9 @@ module.exports = {
         "linux": {
           "target": ["AppImage"]
         },
+        "directories": {
+          "buildResources": "public/icons"
+        },
         "extraResources": [
           {
             "from": "./src/extra-resources/",

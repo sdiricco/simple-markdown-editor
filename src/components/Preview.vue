@@ -1,7 +1,13 @@
 <template>
   <div class="m-wrapper">
-    <div class="m-container markdown-body" color="transparent" v-scroll.self="onScroll" :style="{ height: height }" v-html="getPreviewValue" id="myfid"></div>
-    <Toc class="toc thin-scroll" v-if="getPreviewValue"/>
+    <div
+      class="m-container markdown-body"
+      color="transparent"
+      v-scroll.self="onScroll"
+      :style="{ height: height }"
+      v-html="getPreviewValue"
+    ></div>
+    <Toc class="toc" v-if="getPreviewValue && showToc" />
     <Spinner message="Building.." :enable="getIsLoading" />
   </div>
 </template>
@@ -9,13 +15,13 @@
 <script>
 import { mapGetters, mapActions } from "vuex";
 import Spinner from "./Spinner.vue";
-import Toc from "./Toc.vue"
+import Toc from "./Toc.vue";
 
 export default {
   name: "Preview",
   components: {
     Spinner,
-    Toc
+    Toc,
   },
   props: {
     height: {
@@ -29,21 +35,36 @@ export default {
       getIsSync: "preview/getIsSync",
       getIsLoading: "markdown/getIsLoading",
     }),
+    showToc() {
+      {
+        switch (this.$vuetify.breakpoint.name) {
+          case "xs":
+          case "sm":
+            return false;
+          case "md":
+          case "lg":
+          case "xl":
+            return true;
+          default:
+            return true;
+        }
+      }
+    },
   },
-  watch:{
-    getIsSync(sync){
+  watch: {
+    getIsSync(sync) {
       if (!sync) {
         this.markdownParse();
       }
-    }
+    },
   },
   methods: {
     ...mapActions({
       markdownParse: "markdown/parse",
     }),
-    onScroll(){
+    onScroll() {
       console.log(window.scrollY);
-    }
+    },
   },
   mounted() {
     if (!this.getIsSync) {
@@ -59,21 +80,22 @@ export default {
 .m-container {
   padding: 16px;
   max-width: 600px;
-  /* margin: auto; */
+  min-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .m-wrapper {
   display: flex;
-  justify-content: center;
 }
 
 .toc {
-  display: inline;
+  display: inline-flex;
   position: sticky;
   top: 24px;
-  height: 80vh;
-  width: 200px;
-  max-width: 200px;
+  height: 60vh;
+  width: 250px;
+  max-width: 250px;
+  margin-right: auto;
 }
-
 </style>

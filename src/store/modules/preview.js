@@ -22,6 +22,11 @@ const actions = {
   },
   setToc({ commit }, value) {
     commit("setToc", value);
+  },
+  setDefaults({ commit }){
+    commit("setValue", '');
+    commit("setValueRaw", '');
+    commit("setToc", [])
   }
 };
 

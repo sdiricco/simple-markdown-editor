@@ -41,6 +41,18 @@ export function create(app, window, onClickItem) {
       label: "File",
       submenu: [
         {
+          id: "file/new",
+          label: "New",
+          accelerator: "Ctrl + N",
+          click: (menuItem, browserWindow, event) =>
+            onClickItem(["File", "New"], {
+              options: optionsFiltered(menuItem),
+              menuItem: menuItem,
+              browserWindow: browserWindow,
+              event: event,
+            }),
+        },
+        {
           id: "file/open",
           label: "Open",
           accelerator: "Ctrl + O",

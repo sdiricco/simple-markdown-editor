@@ -41,15 +41,15 @@ const actions = {
       throw e;
     }
   },
+
+  setDefaults({ commit }) {
+    commit("setFile", { name: "Untiled-1.md", value: "", ext: "", path: "", stat: {} });
+  },
 };
 
 const mutations = {
   setFile: (state, { name, value, ext, path, stat }) => (
-    (state.name = name),
-    (state.value = value),
-    (state.ext = ext),
-    (state.path = path),
-    (state.stat = stat)
+    (state.name = name), (state.value = value), (state.ext = ext), (state.path = path), (state.stat = stat)
   ),
 };
 

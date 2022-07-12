@@ -11,7 +11,6 @@ const state = {
   settings:{
     dialog: false
   },
-  locationHash: ''
 };
 
 const getters = {
@@ -26,7 +25,6 @@ const getters = {
     }
     return title;
   },
-  getLocationHash:(state) => state.locationHash
 };
 
 const throttledDropZone = _.throttle((value)=>{
@@ -62,12 +60,6 @@ const actions = {
   },
   closeSettings({commit}){
     commit("setSettings", {dialog: false})
-  },
-  watchLocationHash({commit}){
-    window.addEventListener('hashchange', () => {
-      console.log('The hash has changed!')
-      commit('setLocationHash', window.location.hash)
-    }, false);
   },
 };
 

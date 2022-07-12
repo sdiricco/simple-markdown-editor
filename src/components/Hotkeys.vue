@@ -41,6 +41,10 @@ export default {
       ],
       hotkeys: [
         {
+          combination: "Ctrl + N",
+          description: "Create a new markdown file",
+        },
+        {
           combination: "Ctrl + O",
           description: "Open a new markdown file",
         },

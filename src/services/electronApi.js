@@ -3,6 +3,10 @@ import { ElectronError } from "./errors";
 
 export const listeners = {
 
+  //on new file
+  set onClickOpenNewFile(callback) {
+    ipcRenderer.on("menu/file/new", callback);
+  },
   //on open file
   set onClickOpenFile(callback) {
     ipcRenderer.on("menu/file/open", callback);

@@ -1,13 +1,11 @@
 <template>
-  <div class="toc-wrapper thin-scroll">
+  <div class="m-wrapper">
     <h3>Table of contents</h3>
-    <v-navigation-drawer class="ml-6 mt-2 pr-8" permanent right color="transparent">
-      <v-tabs vertical background-color="transparent" @change="onChangeToc" class="thin-scroll">
-        <v-tab v-for="toc in getToc" :key="toc.slug" :ripple="false" id="toc-item" :class="`toc-link pl-${toc.lvl*2}`" :href="`#${toc.slug}`">
-          {{toc.content}}
-        </v-tab>
-      </v-tabs>
-    </v-navigation-drawer>
+    <ul class="thin-scroll ml-6 mt-2 pr-4">
+      <li v-for="toc in getToc" :key="toc.slug" :class="`pt-2 pl-${toc.lvl*4}`">
+        <a :href="`#${toc.slug}`">{{toc.content}}</a>
+      </li>
+    </ul>
   </div>
 </template>
 
@@ -20,35 +18,28 @@ export default {
       getToc: "preview/getToc",
     }),
   },
-  methods: {
-    onChangeToc(href){
-      console.log("href", href);
-      window.location.hash = `#${href}`
-    }
-  },
 };
 </script>
 
 <style scoped>
-.toc-wrapper {
+.m-wrapper {
   display: flex;
   flex-direction: column;
 }
-#toc-item {
-  height: 20px;
-}
-.toc-link {
-  justify-content: start;
-  text-transform: none;
-  letter-spacing: inherit;
+
+.m-wrapper > ul {
+  overflow-y: auto;
+  max-height: 80vh;
+  border-left: 1px solid rgba(128, 128, 128, 1);
+  padding:0px
+} 
+
+.m-wrapper > ul > li {
+  line-height: 1.2;
 }
 
-.anchor-link{
+.m-wrapper > ul > li > a {
   text-decoration: none;
-  color: inherit;
-  width: 100%;
-  text-align: left;
-  height: 100%;
 }
 </style>
 

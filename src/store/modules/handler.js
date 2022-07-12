@@ -65,6 +65,23 @@ const actions = {
     }
   },
 
+  //On Click: Menu > File > New
+  async onOpenNewFile({dispatch, getters}){
+    try {
+      if (getters.getFileHasChanged) {
+        const { response } = await electronWrapper.showMessageQuestion(
+          "The file has changed. Are you sure you want to create a new file without saving?"
+        );
+        if (response.cancel) {
+          return;
+        }
+      }
+      dispatch("setDefaults");
+    } catch (error) {
+      await dispatch('error/electron', {message: 'Error during opening a new file.', error: error}, {root:true})
+    }
+  },
+
   //On Drop files
   async onDropFiles({ dispatch, getters }, data = { files: [] }) {
     try {
@@ -89,7 +106,6 @@ const actions = {
   async onInit({ dispatch }) {
     try {
       dispatch('attachElectronListener')
-      dispatch('main/watchLocationHash', null, {root:true})
       //get the app args
       const { args } = await electronApi.reanderReady();
       //filter only md files
@@ -112,6 +128,12 @@ const actions = {
     await dispatch("editor/reload", null, { root: true });
   },
 
+  async setDefaults({dispatch}){
+    await dispatch("editor/setDefaults", null, { root: true });
+    await dispatch("preview/setDefaults", null, { root: true });
+    await dispatch("file/setDefaults", null, { root: true });
+  },
+
   async onMenuPreferences({dispatch}){
     dispatch("main/showSettings", null, {root: true})
   },
@@ -121,6 +143,7 @@ const actions = {
   },
 
   attachElectronListener({dispatch}){
+    electronApi.listeners.onClickOpenNewFile = () => dispatch("onOpenNewFile")
     electronApi.listeners.onClickOpenFile = () => dispatch("onMenuOpen")
     electronApi.listeners.onClickSaveFile = () => dispatch("onMenuSave")
     electronApi.listeners.onClickSaveAsFile = ()=> dispatch("onMenuSaveAs")

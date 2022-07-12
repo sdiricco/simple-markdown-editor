@@ -11,11 +11,15 @@ const getters = {
 };
 
 const actions = {
-  async setValue({ commit }, value) {
+  setValue({ commit }, value) {
     commit("setValue", value);
   },
-  async reload({commit, getters}){
+  reload({commit, getters}){
     commit("setReloadCount", getters.getReload + 1)
+  },
+  setDefaults({ commit }){
+    commit("setValue", "");
+    commit("setReloadCount", 0);
   }
 };
 
