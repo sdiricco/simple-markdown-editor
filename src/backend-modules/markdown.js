@@ -3,6 +3,8 @@ import hljs from "highlight.js";
 import { nativeImage } from "electron";
 import path from "path";
 import markdownToc from 'markdown-toc-unlazy'
+import { v4 as uuidv4 } from 'uuid';
+import uslug from "uslug"
 
 function isUrl(string) {
   let url;
@@ -15,7 +17,9 @@ function isUrl(string) {
 }
 
 let basePath = "";
-let headings = []
+let headings = [];
+let tocList = [];
+
 
 const renderer = {
   image(href = "", title = "", text = "") {
@@ -26,8 +30,8 @@ const renderer = {
   link(href = "", title = "", text = "") {
     return `<a href="${href}" alt="${text}" ${isUrl(href) ? "target='_blank'" : ''} >${text}</a>`;
   },
-  heading(text, level){
-    const escapedText = text.toLowerCase().replace(/[^\w]+/g, '-')
+  heading(text, level, raw){
+    const escapedText = uslug(text)
     const duplicateIndex = headings.map(({ text }) => text).indexOf(escapedText)
     let duplicateText = undefined
     if (duplicateIndex === -1) {
@@ -39,7 +43,14 @@ const renderer = {
       headings[duplicateIndex].count++
       duplicateText = `${escapedText}-${headings[duplicateIndex].count}`
     }
-    const id = `${duplicateText || escapedText}`
+    const id = `${duplicateText || escapedText}`;
+    tocList.push({
+      content: raw,
+      slug: id,
+      lvl: level
+    })
+    console.log(tocList)
+
     return `<h${level} name="${id}" id="${id}">${text}</h${level}>\n`
   }
 };
@@ -69,17 +80,15 @@ export function parse(data = {value: null, path: null}) {
       basePath = path.dirname(data.path)
     }
     headings = [];
+    tocList = [];
     return marked.parse(data.value);
   } catch (e) {
     throw(e)
   }
 }
 
-function removeJunk(str, ele, arr) {
-  return str.indexOf('...') === -1;
-}
 
-export function toc(data){
-  return markdownToc(data, {slugify: require('uslug')}).json
+export function toc(){
+  return tocList
 }
 
