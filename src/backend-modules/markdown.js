@@ -75,7 +75,11 @@ export function parse(data = {value: null, path: null}) {
   }
 }
 
+function removeJunk(str, ele, arr) {
+  return str.indexOf('...') === -1;
+}
+
 export function toc(data){
-  return markdownToc(data).json
+  return markdownToc(data, {slugify: require('uslug')}).json
 }
 

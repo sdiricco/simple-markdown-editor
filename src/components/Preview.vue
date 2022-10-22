@@ -79,8 +79,9 @@ export default {
 @import "../styles/github-dark.css";
 .m-container {
   padding: 16px;
-  max-width: 600px;
-  min-width: 600px;
+  max-width: 900px;
+  width: 900px;
+  min-width: 400px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -95,7 +96,10 @@ export default {
   top: 24px;
   height: 60vh;
   width: 250px;
+  min-width: 250px;
   max-width: 250px;
   margin-right: auto;
+  margin-top:16px
+
 }
 </style>
