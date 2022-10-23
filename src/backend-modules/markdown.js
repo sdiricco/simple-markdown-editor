@@ -49,7 +49,6 @@ const renderer = {
       slug: id,
       lvl: level
     })
-    console.log(tocList)
 
     return `<h${level} name="${id}" id="${id}">${text}</h${level}>\n`
   }
@@ -88,7 +87,11 @@ export function parse(data = {value: null, path: null}) {
 }
 
 
-export function toc(){
-  return tocList
+export function toc(data){
+  const result = markdownToc(data).json
+  return tocList.map((v, i) => {
+    v.content = result[i].content
+    return v
+  })
 }
 
